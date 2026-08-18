@@ -27,8 +27,17 @@ GitHub Pages で公開する場合：リポジトリ設定 → Pages → Source 
 |---|---|---|
 | 1. 要件定義 | [docs/01_requirements.md](docs/01_requirements.md) | ✅ v1.1 |
 | 2. 学習ラボ設計 | [docs/02_platform_design.md](docs/02_platform_design.md) | ✅ |
-| 3. カリキュラム詳細（12週） | docs/03_curriculum.md | ⬜ 次ステップ |
-| 4. 学習の実行 | knowledge / hands-on / casebook | ⬜ |
+| 3. カリキュラム詳細（12週） | [docs/03_curriculum.md](docs/03_curriculum.md) | ✅ |
+| 4. 学習の実行 | [knowledge/](knowledge/) ／ [hands-on/](hands-on/) ／ casebook | 🔵 W1 進行中 |
+
+### W1: FI 全体像・組織構造・会計年度・通貨
+
+| 教材 | 内容 |
+|---|---|
+| [knowledge/w01_organization.md](knowledge/w01_organization.md) | 講義ノート＋設計判断リスト＋自己テスト 7 問 |
+| [hands-on/w01.md](hands-on/w01.md) | 検証環境／サンドボックス／ラボの役割別ハンズオン |
+| 学習ラボ ドリル | W1 の問題 19 問（うち設計判断の記述式 3 問） |
+| 学習ラボ ミッション | M05 期間を締める |
 
 ## 環境ごとの役割分担
 
