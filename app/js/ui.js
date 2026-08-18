@@ -51,8 +51,12 @@
      ========================================================= */
   function renderHome() {
     var st = S.state(), lp = S.levelProgress();
-    var due = S.dueDrills(DRILLS).length;
+    var scopedDrills = S.inScope(DRILLS);
+    var due = S.dueDrills(scopedDrills).length;
+    var weekMissions = MISSIONS.filter(function (m) { return m.week === st.week; });
+    var weekDone = weekMissions.filter(function (m) { return st.missions[m.id] && st.missions[m.id].done; }).length;
     var doneM = MISSIONS.filter(function (m) { return st.missions[m.id] && st.missions[m.id].done; }).length;
+    var wk = SEED.weeks.filter(function (w) { return w.w === st.week; })[0] || SEED.weeks[0];
 
     var stats = '<div class="card"><div class="grid g3">' +
       '<div class="stat"><b>Lv.' + S.level() + '</b><span>レベル</span></div>' +
@@ -64,11 +68,23 @@
       '<div class="small muted" style="text-align:right">次のレベルまで ' + Math.max(0, lp.next - st.xp) + ' XP</div>' +
       '</div>';
 
-    var todo = '<div class="card"><h2>今日やること</h2><ul class="small">' +
+    var todo = '<div class="card">' +
+      '<div style="display:flex;gap:.75rem;align-items:center;flex-wrap:wrap;margin-bottom:.5rem">' +
+      '<h2 style="margin:0">今週：W' + st.week + '　' + esc(wk.t) + '</h2>' +
+      '<span style="flex:1"></span>' +
+      '<label class="f" style="margin:0">学習中の週</label>' +
+      '<select data-week="1" style="width:auto">' + SEED.weeks.map(function (w) {
+        return '<option value="' + w.w + '"' + (w.w === st.week ? ' selected' : '') + '>W' + w.w + ' ' + esc(w.t) + '</option>';
+      }).join('') + '</select></div>' +
+      '<p class="small muted">到達目標：' + esc(wk.g) + '</p>' +
+      '<ul class="small">' +
+      '<li>今週のミッション：<b>' + weekDone + ' / ' + weekMissions.length + ' 達成</b>' +
+      (weekMissions.length ? '（<a href="#" data-nav="missions">見る</a>）' : '（この週はラボ課題なし。実機ハンズオン中心）') + '</li>' +
       '<li>復習期限のドリル：<b>' + due + ' 問</b>' + (due ? '（<a href="#" data-nav="drill">解く</a>）' : '（なし。よく回っています）') + '</li>' +
-      '<li>未達成ミッション：<b>' + (MISSIONS.length - doneM) + ' 件</b>（<a href="#" data-nav="missions">見る</a>）</li>' +
       '<li>転記ラボで設定をいじって挙動の差を観察する（<a href="#" data-nav="lab">開く</a>）</li>' +
-      '</ul></div>';
+      '</ul>' +
+      '<p class="small muted">出題範囲は W1〜W' + st.week + '。まだ学んでいない週の論点は出しません。' +
+      '週を進めると出題範囲とミッションが増えます。</p></div>';
 
     var tree = '<div class="card"><h2>カリキュラム（12週）</h2>' +
       '<p class="small muted">各週の到達目標。習熟度は下の自己評価と連動させて更新します。</p><div class="tree">' +
@@ -103,6 +119,7 @@
   function exportText() {
     var st = S.state();
     var l = ['# 学習ログ ' + S.today(), '',
+      '- 学習中の週: W' + st.week,
       '- レベル: ' + S.level() + '（XP ' + st.xp + '）',
       '- 連続学習日数: ' + st.streak.count + '（最長 ' + st.streak.best + '）', '',
       '## 習熟度'];
@@ -376,18 +393,21 @@
 
   function startQuiz(mode) {
     quiz.mode = mode;
-    quiz.queue = (mode === 'all' ? DRILLS.slice() : S.dueDrills(DRILLS)).sort(function () { return Math.random() - 0.5; });
+    var scoped = S.inScope(DRILLS);
+    quiz.queue = (mode === 'all' ? scoped.slice() : S.dueDrills(scoped)).sort(function () { return Math.random() - 0.5; });
     quiz.idx = 0; quiz.answered = null;
   }
 
   function renderDrill() {
     if (!quiz.queue.length && quiz.idx === 0) {
-      var due = S.dueDrills(DRILLS).length;
+      var scoped = S.inScope(DRILLS);
+      var due = S.dueDrills(scoped).length;
       return '<div class="card"><h2>ドリル</h2>' +
         '<p class="small muted">間隔反復で出題します。正解すると次の出題が先送りされ、間違えると翌日また出ます。</p>' +
-        '<p>復習期限：<b>' + due + ' 問</b>／全 ' + DRILLS.length + ' 問</p>' +
+        '<p>復習期限：<b>' + due + ' 問</b>／出題範囲 ' + scoped.length + ' 問（W1〜W' + S.state().week + '）' +
+        (DRILLS.length > scoped.length ? '　<span class="muted">／ 未開放 ' + (DRILLS.length - scoped.length) + ' 問</span>' : '') + '</p>' +
         '<button class="btn" data-act="quiz-start" data-mode="due"' + (due ? '' : ' disabled') + '>期限の問題を解く</button> ' +
-        '<button class="btn ghost" data-act="quiz-start" data-mode="all">全問から解く</button></div>';
+        '<button class="btn ghost" data-act="quiz-start" data-mode="all">範囲内から全問解く</button></div>';
     }
     if (quiz.idx >= quiz.queue.length) {
       return '<div class="card"><h2>お疲れさまでした</h2><p>' + quiz.queue.length + ' 問を解きました。</p>' +
@@ -430,22 +450,54 @@
   /* =========================================================
      ミッション一覧
      ========================================================= */
+  function missionCard(m, st, dim) {
+    var done = st.missions[m.id] && st.missions[m.id].done;
+    return '<div class="mission' + (done ? ' done' : '') + '"' + (dim ? ' style="opacity:.55"' : '') + '>' +
+      '<div class="small muted">W' + m.week + '　' + esc(S.DOMAINS[m.domain] || '') + '　' + m.xp + ' XP' +
+      (m.flag === 'core' ? ' <span class="tag core">核心課題</span>' : '') +
+      (done ? ' <span class="tag ok">達成済</span>' : '') + '</div>' +
+      '<h3>' + esc(m.id + ' ' + m.title) + '</h3>' +
+      '<p class="small">' + esc(m.brief) + '</p>' +
+      (done ? '<details><summary>この課題で学んだこと</summary><p class="small muted">' + esc(m.lesson) + '</p></details>' : '') +
+      '<button class="btn sm" data-act="mission-take" data-id="' + m.id + '">転記ラボで挑戦</button>' +
+      '</div>';
+  }
+
   function renderMissions() {
     var st = S.state();
-    return '<div class="card"><h2>ミッション</h2>' +
-      '<p class="small muted">課題を選ぶと転記ラボに設定され、転記のたびに達成判定されます。</p></div>' +
-      MISSIONS.map(function (m) {
-        var done = st.missions[m.id] && st.missions[m.id].done;
-        return '<div class="mission' + (done ? ' done' : '') + '">' +
-          '<div class="small muted">W' + m.week + '　' + esc(S.DOMAINS[m.domain] || '') + '　' + m.xp + ' XP' +
-          (m.flag === 'core' ? ' <span class="tag core">核心課題</span>' : '') +
-          (done ? ' <span class="tag ok">達成済</span>' : '') + '</div>' +
-          '<h3>' + esc(m.id + ' ' + m.title) + '</h3>' +
-          '<p class="small">' + esc(m.brief) + '</p>' +
-          (done ? '<details><summary>この課題で学んだこと</summary><p class="small muted">' + esc(m.lesson) + '</p></details>' : '') +
-          '<button class="btn sm" data-act="mission-take" data-id="' + m.id + '">転記ラボで挑戦</button>' +
-          '</div>';
-      }).join('');
+    var byWeek = {};
+    MISSIONS.forEach(function (m) { (byWeek[m.week] = byWeek[m.week] || []).push(m); });
+    var weeks = Object.keys(byWeek).map(Number).sort(function (a, b) { return a - b; });
+
+    var out = '<div class="card"><h2>ミッション</h2>' +
+      '<p class="small">課題を選ぶと転記ラボに設定され、転記のたびに達成判定されます。</p>' +
+      '<p class="small muted"><b>ID は作成順であって学習順ではありません。</b>' +
+      'カリキュラム上の週で並べています。まず「今週」の課題から進めてください。</p></div>';
+
+    var now = weeks.filter(function (w) { return w === st.week; });
+    var past = weeks.filter(function (w) { return w < st.week; });
+    var future = weeks.filter(function (w) { return w > st.week; });
+
+    function section(title, ws, dim, note) {
+      if (!ws.length) return '';
+      return '<h2 style="margin:1.2rem 0 .5rem">' + title + '</h2>' +
+        (note ? '<p class="small muted">' + note + '</p>' : '') +
+        ws.map(function (w) {
+          var wk = SEED.weeks.filter(function (x) { return x.w === w; })[0];
+          return '<div class="small muted" style="margin:.6rem 0 .3rem">W' + w + '　' + esc(wk ? wk.t : '') + '</div>' +
+            byWeek[w].map(function (m) { return missionCard(m, st, dim); }).join('');
+        }).join('');
+    }
+
+    out += section('今週の課題', now, false, '');
+    if (!now.length) {
+      out += '<div class="card"><p class="small">W' + st.week + ' にラボ課題はありません。' +
+        'この週は実機ハンズオンと講義が中心です（<span class="mono">hands-on/</span> を参照）。</p></div>';
+    }
+    out += section('復習できる課題（学習済みの週）', past, false, '');
+    out += section('この先の課題', future, true,
+      'まだ学んでいない論点です。先に解いても構いませんが、解説の意味が取りづらいはずです。');
+    return out;
   }
 
   /* =========================================================
@@ -567,6 +619,7 @@
       return false;
     }
     if (d.mastery) { S.setMastery(d.mastery, +el.value); return true; }
+    if (d.week) { S.setWeek(+el.value); return true; }
     if (d.cfg) {
       var path = d.cfg.split('.');
       cfg[path[0]][path[1]] = num(el.value, cfg[path[0]][path[1]]);

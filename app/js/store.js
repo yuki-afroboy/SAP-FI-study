@@ -26,6 +26,7 @@
 
   function blank() {
     return {
+      week: 1,
       xp: 0,
       streak: { last: '', count: 0, best: 0 },
       missions: {},
@@ -123,6 +124,11 @@
   }
 
   function setMastery(k, v) { state.mastery[k] = v; save(); }
+  function setWeek(n) { state.week = Math.max(1, Math.min(12, n)); save(); }
+  /* 学習済みの週までを出題範囲とする。未学習の論点を先に出さない。 */
+  function inScope(items) {
+    return items.filter(function (x) { return (x.week || 1) <= state.week; });
+  }
   function recordDoc(d) { state.docs.unshift(d); state.docs = state.docs.slice(0, 50); save(); }
   function saveCfg(cfg) { state.cfg = cfg; save(); }
   function reset() { state = blank(); save(); }
@@ -132,7 +138,8 @@
     save: save, addXP: addXP, level: level, levelProgress: levelProgress,
     touchStreak: touchStreak, drillCard: drillCard, dueDrills: dueDrills,
     gradeDrill: gradeDrill, completeMission: completeMission,
-    setMastery: setMastery, recordDoc: recordDoc, saveCfg: saveCfg, reset: reset,
+    setMastery: setMastery, setWeek: setWeek, inScope: inScope,
+    recordDoc: recordDoc, saveCfg: saveCfg, reset: reset,
     today: today, DOMAINS: DOMAINS, LEVELS: LEVELS
   };
 })(typeof window !== 'undefined' ? window : globalThis);

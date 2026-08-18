@@ -292,18 +292,18 @@ SEED.paymentMethods= { 'T':'銀行振込', 'B':'手形', 'D':'口座振替' };
 
 /* ---------- カリキュラム（スキルツリー） ---------- */
 SEED.weeks = [
-  { w:1,  d:'A-1', t:'FI 全体像・組織構造',        g:'会社コード／原価管理領域／元帳／通貨の関係を図示して説明できる' },
-  { w:2,  d:'A-1', t:'Universal Journal と GL マスタ', g:'ACDOCA 一元化の意味と、勘定マスタの各項目が何に効くかを説明できる' },
-  { w:3,  d:'A-1', t:'伝票制御①（構造）',           g:'伝票タイプ・転記キー・項目ステータスの三者関係を設計できる' },
-  { w:4,  d:'A-1', t:'伝票制御②（自動処理）',       g:'自動転記・為替換算・振替・消込の仕組みを説明できる' },
-  { w:5,  d:'A-2', t:'AP（債務）',                  g:'仕入先マスタ・請求計上・支払プログラム F110 を一人称で回せる' },
-  { w:6,  d:'A-2', t:'MM-FI 連携',                  g:'発注〜入庫〜請求照合の仕訳と GR/IR・価格差異を説明できる' },
-  { w:7,  d:'A-2', t:'AR（債権）と SD-FI',          g:'得意先マスタ・請求・入金消込・販売連動を説明できる' },
-  { w:8,  d:'A-4', t:'AA（固定資産）',              g:'償却領域・資産クラス・取得／除却／償却実行を説明・実行できる' },
-  { w:9,  d:'A-4', t:'銀行会計・日本固有',          g:'支払方法・銀行勘定・消費税・インボイス制度を説明できる' },
-  { w:10, d:'A-3', t:'月次・年次決算',              g:'決算プロセス全体を一人称で回し、CO 連携まで説明できる' },
-  { w:11, d:'B-1', t:'不具合調査',                  g:'伝票番号から原因を切り分ける調査ルートを確立する' },
-  { w:12, d:'B-2', t:'統合演習（Fit&Gap）',         g:'設計判断と根拠を文書化し、レビューに耐える' }
+  { w:1,  d:'A-1', t:'FI 全体像・組織構造・会計年度・通貨', g:'会社コード／原価管理領域／通貨／会計年度の関係を、白紙に図を描いて説明できる' },
+  { w:2,  d:'A-1', t:'元帳と Universal Journal、G/L 勘定マスタ', g:'並行元帳が必要になる理由を説明でき、勘定マスタの各項目がどの挙動に効くか言える' },
+  { w:3,  d:'A-1', t:'伝票制御①（構造）',      g:'伝票タイプ・転記キー・項目ステータスの三者関係を設計できる' },
+  { w:4,  d:'A-1', t:'伝票制御②（自動処理）',  g:'自動転記・為替換算・消込の仕組みを説明できる' },
+  { w:5,  d:'A-2', t:'AP（債務）',             g:'仕入先マスタから支払実行までを一人称で回せる' },
+  { w:6,  d:'A-2', t:'MM-FI 連携',             g:'発注〜入庫〜請求照合の仕訳を説明でき、差異の原因を切り分けられる' },
+  { w:7,  d:'A-2', t:'AR（債権）と SD-FI',     g:'得意先請求から入金消込までを説明でき、SD からの連動を追える' },
+  { w:8,  d:'A-4', t:'AA（固定資産）',         g:'償却領域の設計思想を説明でき、取得〜償却〜除却を実行できる' },
+  { w:9,  d:'A-4', t:'銀行会計と各国法要件',   g:'日本の税制対応を説明でき、複数国の法要件を 1 システムで賄う構造を語れる' },
+  { w:10, d:'A-3', t:'月次・年次決算',         g:'決算プロセス全体を一人称で回せる' },
+  { w:11, d:'B-1', t:'不具合調査',             g:'伝票番号を起点に原因を切り分ける調査ルートを確立する' },
+  { w:12, d:'B-2', t:'統合演習（Fit&Gap）',    g:'設計判断と根拠を文書化し、レビューに耐える' }
 ];
 
 /* =========================================================
@@ -611,6 +611,7 @@ SEED.weeks = [
 
   function blank() {
     return {
+      week: 1,
       xp: 0,
       streak: { last: '', count: 0, best: 0 },
       missions: {},
@@ -708,6 +709,11 @@ SEED.weeks = [
   }
 
   function setMastery(k, v) { state.mastery[k] = v; save(); }
+  function setWeek(n) { state.week = Math.max(1, Math.min(12, n)); save(); }
+  /* 学習済みの週までを出題範囲とする。未学習の論点を先に出さない。 */
+  function inScope(items) {
+    return items.filter(function (x) { return (x.week || 1) <= state.week; });
+  }
   function recordDoc(d) { state.docs.unshift(d); state.docs = state.docs.slice(0, 50); save(); }
   function saveCfg(cfg) { state.cfg = cfg; save(); }
   function reset() { state = blank(); save(); }
@@ -717,7 +723,8 @@ SEED.weeks = [
     save: save, addXP: addXP, level: level, levelProgress: levelProgress,
     touchStreak: touchStreak, drillCard: drillCard, dueDrills: dueDrills,
     gradeDrill: gradeDrill, completeMission: completeMission,
-    setMastery: setMastery, recordDoc: recordDoc, saveCfg: saveCfg, reset: reset,
+    setMastery: setMastery, setWeek: setWeek, inScope: inScope,
+    recordDoc: recordDoc, saveCfg: saveCfg, reset: reset,
     today: today, DOMAINS: DOMAINS, LEVELS: LEVELS
   };
 })(typeof window !== 'undefined' ? window : globalThis);
@@ -741,7 +748,7 @@ SEED.weeks = [
 
   root.MISSIONS = [
     {
-      id: 'M01', week: 1, domain: 'A-1', xp: 30,
+      id: 'M01', week: 3, domain: 'A-1', xp: 30,
       title: '原価センタの壁',
       brief: '旅費交通費 610000 に 11,000 を計上し、普通預金 113100 から支払う SA 伝票を転記してください。',
       hint: '610000 の項目ステータスグループは G004（原価勘定）です。IMG タブで G004 の設定を見て、何が必須かを確かめてから入力してください。',
@@ -753,7 +760,7 @@ SEED.weeks = [
       }
     },
     {
-      id: 'M02', week: 1, domain: 'A-1', xp: 30,
+      id: 'M02', week: 3, domain: 'A-1', xp: 30,
       title: '統制を壊さずに通す',
       brief: '伝票タイプ KR で仕入先 V-1001 への請求を転記してください。ただし OBA7 の「参照番号必須」は外さないこと。',
       hint: '設定を緩めれば通りますが、それは統制の放棄です。要件を満たしたまま通す方法を考えてください。',
@@ -766,7 +773,7 @@ SEED.weeks = [
       }
     },
     {
-      id: 'M03', week: 2, domain: 'A-4', xp: 40,
+      id: 'M03', week: 4, domain: 'A-4', xp: 40,
       title: '消費税を自動生成させる',
       brief: '仕入高 500000 に税抜 10,000、税コード V1（10%）で計上し、仮払消費税 175000 に 1,000 を自動転記させてください。',
       hint: '税コード欄に V1 を指定します。「税込入力」チェックの有無で、入力した金額の意味が変わります。',
@@ -778,7 +785,7 @@ SEED.weeks = [
       }
     },
     {
-      id: 'M04', week: 1, domain: 'A-1', xp: 50, flag: 'core',
+      id: 'M04', week: 3, domain: 'A-1', xp: 50, flag: 'core',
       title: '【核心】設定を変えて挙動を変える',
       brief: 'SA 伝票では仕入先明細（転記キー 31）が転記できません。IMG タブで OBA7 の「許可勘定タイプ」に K を追加し、SA 伝票で仕入先明細を含む伝票を転記してください。',
       hint: 'まず設定を変えずに転記してエラー DT003 を見てください。次に IMG → 伝票タイプ → SA → 許可勘定タイプ に K を追加します。',
@@ -814,7 +821,7 @@ SEED.weeks = [
       }
     },
     {
-      id: 'M07', week: 2, domain: 'A-2', xp: 40,
+      id: 'M07', week: 7, domain: 'A-2', xp: 40,
       title: '調整勘定は誰が書くのか',
       brief: '得意先請求（伝票タイプ DR、転記キー 01）を転記し、ACDOCA に売掛金 121000 が記帳されることを確認してください。',
       hint: '121000 を明細に直接指定してはいけません。得意先を指定すると、取引先マスタの調整勘定へ自動的に記帳されます。',
@@ -826,7 +833,7 @@ SEED.weeks = [
       }
     },
     {
-      id: 'M08', week: 2, domain: 'B-1', xp: 25,
+      id: 'M08', week: 4, domain: 'B-1', xp: 25,
       title: '触れない勘定',
       brief: '仮払消費税 175000 を明細に直接指定して転記し、エラー AC004（自動転記のみ）を発生させてください。',
       hint: 'FS00 の「自動転記のみ」チェックが効いています。',
@@ -848,7 +855,7 @@ SEED.weeks = [
       }
     },
     {
-      id: 'M10', week: 2, domain: 'A-2', xp: 35,
+      id: 'M10', week: 5, domain: 'A-2', xp: 35,
       title: '仕入先へ支払う',
       brief: '伝票タイプ KZ で、仕入先 V-1001 への支払（買掛金の消し込み側 借方 ／ 普通預金 貸方）を 11,000 で転記してください。',
       hint: '支払側の転記キーは 25 です。買掛金 211000 は取引先の調整勘定として自動的に選ばれます。',
@@ -1122,8 +1129,12 @@ SEED.weeks = [
      ========================================================= */
   function renderHome() {
     var st = S.state(), lp = S.levelProgress();
-    var due = S.dueDrills(DRILLS).length;
+    var scopedDrills = S.inScope(DRILLS);
+    var due = S.dueDrills(scopedDrills).length;
+    var weekMissions = MISSIONS.filter(function (m) { return m.week === st.week; });
+    var weekDone = weekMissions.filter(function (m) { return st.missions[m.id] && st.missions[m.id].done; }).length;
     var doneM = MISSIONS.filter(function (m) { return st.missions[m.id] && st.missions[m.id].done; }).length;
+    var wk = SEED.weeks.filter(function (w) { return w.w === st.week; })[0] || SEED.weeks[0];
 
     var stats = '<div class="card"><div class="grid g3">' +
       '<div class="stat"><b>Lv.' + S.level() + '</b><span>レベル</span></div>' +
@@ -1135,11 +1146,23 @@ SEED.weeks = [
       '<div class="small muted" style="text-align:right">次のレベルまで ' + Math.max(0, lp.next - st.xp) + ' XP</div>' +
       '</div>';
 
-    var todo = '<div class="card"><h2>今日やること</h2><ul class="small">' +
+    var todo = '<div class="card">' +
+      '<div style="display:flex;gap:.75rem;align-items:center;flex-wrap:wrap;margin-bottom:.5rem">' +
+      '<h2 style="margin:0">今週：W' + st.week + '　' + esc(wk.t) + '</h2>' +
+      '<span style="flex:1"></span>' +
+      '<label class="f" style="margin:0">学習中の週</label>' +
+      '<select data-week="1" style="width:auto">' + SEED.weeks.map(function (w) {
+        return '<option value="' + w.w + '"' + (w.w === st.week ? ' selected' : '') + '>W' + w.w + ' ' + esc(w.t) + '</option>';
+      }).join('') + '</select></div>' +
+      '<p class="small muted">到達目標：' + esc(wk.g) + '</p>' +
+      '<ul class="small">' +
+      '<li>今週のミッション：<b>' + weekDone + ' / ' + weekMissions.length + ' 達成</b>' +
+      (weekMissions.length ? '（<a href="#" data-nav="missions">見る</a>）' : '（この週はラボ課題なし。実機ハンズオン中心）') + '</li>' +
       '<li>復習期限のドリル：<b>' + due + ' 問</b>' + (due ? '（<a href="#" data-nav="drill">解く</a>）' : '（なし。よく回っています）') + '</li>' +
-      '<li>未達成ミッション：<b>' + (MISSIONS.length - doneM) + ' 件</b>（<a href="#" data-nav="missions">見る</a>）</li>' +
       '<li>転記ラボで設定をいじって挙動の差を観察する（<a href="#" data-nav="lab">開く</a>）</li>' +
-      '</ul></div>';
+      '</ul>' +
+      '<p class="small muted">出題範囲は W1〜W' + st.week + '。まだ学んでいない週の論点は出しません。' +
+      '週を進めると出題範囲とミッションが増えます。</p></div>';
 
     var tree = '<div class="card"><h2>カリキュラム（12週）</h2>' +
       '<p class="small muted">各週の到達目標。習熟度は下の自己評価と連動させて更新します。</p><div class="tree">' +
@@ -1174,6 +1197,7 @@ SEED.weeks = [
   function exportText() {
     var st = S.state();
     var l = ['# 学習ログ ' + S.today(), '',
+      '- 学習中の週: W' + st.week,
       '- レベル: ' + S.level() + '（XP ' + st.xp + '）',
       '- 連続学習日数: ' + st.streak.count + '（最長 ' + st.streak.best + '）', '',
       '## 習熟度'];
@@ -1447,18 +1471,21 @@ SEED.weeks = [
 
   function startQuiz(mode) {
     quiz.mode = mode;
-    quiz.queue = (mode === 'all' ? DRILLS.slice() : S.dueDrills(DRILLS)).sort(function () { return Math.random() - 0.5; });
+    var scoped = S.inScope(DRILLS);
+    quiz.queue = (mode === 'all' ? scoped.slice() : S.dueDrills(scoped)).sort(function () { return Math.random() - 0.5; });
     quiz.idx = 0; quiz.answered = null;
   }
 
   function renderDrill() {
     if (!quiz.queue.length && quiz.idx === 0) {
-      var due = S.dueDrills(DRILLS).length;
+      var scoped = S.inScope(DRILLS);
+      var due = S.dueDrills(scoped).length;
       return '<div class="card"><h2>ドリル</h2>' +
         '<p class="small muted">間隔反復で出題します。正解すると次の出題が先送りされ、間違えると翌日また出ます。</p>' +
-        '<p>復習期限：<b>' + due + ' 問</b>／全 ' + DRILLS.length + ' 問</p>' +
+        '<p>復習期限：<b>' + due + ' 問</b>／出題範囲 ' + scoped.length + ' 問（W1〜W' + S.state().week + '）' +
+        (DRILLS.length > scoped.length ? '　<span class="muted">／ 未開放 ' + (DRILLS.length - scoped.length) + ' 問</span>' : '') + '</p>' +
         '<button class="btn" data-act="quiz-start" data-mode="due"' + (due ? '' : ' disabled') + '>期限の問題を解く</button> ' +
-        '<button class="btn ghost" data-act="quiz-start" data-mode="all">全問から解く</button></div>';
+        '<button class="btn ghost" data-act="quiz-start" data-mode="all">範囲内から全問解く</button></div>';
     }
     if (quiz.idx >= quiz.queue.length) {
       return '<div class="card"><h2>お疲れさまでした</h2><p>' + quiz.queue.length + ' 問を解きました。</p>' +
@@ -1501,22 +1528,54 @@ SEED.weeks = [
   /* =========================================================
      ミッション一覧
      ========================================================= */
+  function missionCard(m, st, dim) {
+    var done = st.missions[m.id] && st.missions[m.id].done;
+    return '<div class="mission' + (done ? ' done' : '') + '"' + (dim ? ' style="opacity:.55"' : '') + '>' +
+      '<div class="small muted">W' + m.week + '　' + esc(S.DOMAINS[m.domain] || '') + '　' + m.xp + ' XP' +
+      (m.flag === 'core' ? ' <span class="tag core">核心課題</span>' : '') +
+      (done ? ' <span class="tag ok">達成済</span>' : '') + '</div>' +
+      '<h3>' + esc(m.id + ' ' + m.title) + '</h3>' +
+      '<p class="small">' + esc(m.brief) + '</p>' +
+      (done ? '<details><summary>この課題で学んだこと</summary><p class="small muted">' + esc(m.lesson) + '</p></details>' : '') +
+      '<button class="btn sm" data-act="mission-take" data-id="' + m.id + '">転記ラボで挑戦</button>' +
+      '</div>';
+  }
+
   function renderMissions() {
     var st = S.state();
-    return '<div class="card"><h2>ミッション</h2>' +
-      '<p class="small muted">課題を選ぶと転記ラボに設定され、転記のたびに達成判定されます。</p></div>' +
-      MISSIONS.map(function (m) {
-        var done = st.missions[m.id] && st.missions[m.id].done;
-        return '<div class="mission' + (done ? ' done' : '') + '">' +
-          '<div class="small muted">W' + m.week + '　' + esc(S.DOMAINS[m.domain] || '') + '　' + m.xp + ' XP' +
-          (m.flag === 'core' ? ' <span class="tag core">核心課題</span>' : '') +
-          (done ? ' <span class="tag ok">達成済</span>' : '') + '</div>' +
-          '<h3>' + esc(m.id + ' ' + m.title) + '</h3>' +
-          '<p class="small">' + esc(m.brief) + '</p>' +
-          (done ? '<details><summary>この課題で学んだこと</summary><p class="small muted">' + esc(m.lesson) + '</p></details>' : '') +
-          '<button class="btn sm" data-act="mission-take" data-id="' + m.id + '">転記ラボで挑戦</button>' +
-          '</div>';
-      }).join('');
+    var byWeek = {};
+    MISSIONS.forEach(function (m) { (byWeek[m.week] = byWeek[m.week] || []).push(m); });
+    var weeks = Object.keys(byWeek).map(Number).sort(function (a, b) { return a - b; });
+
+    var out = '<div class="card"><h2>ミッション</h2>' +
+      '<p class="small">課題を選ぶと転記ラボに設定され、転記のたびに達成判定されます。</p>' +
+      '<p class="small muted"><b>ID は作成順であって学習順ではありません。</b>' +
+      'カリキュラム上の週で並べています。まず「今週」の課題から進めてください。</p></div>';
+
+    var now = weeks.filter(function (w) { return w === st.week; });
+    var past = weeks.filter(function (w) { return w < st.week; });
+    var future = weeks.filter(function (w) { return w > st.week; });
+
+    function section(title, ws, dim, note) {
+      if (!ws.length) return '';
+      return '<h2 style="margin:1.2rem 0 .5rem">' + title + '</h2>' +
+        (note ? '<p class="small muted">' + note + '</p>' : '') +
+        ws.map(function (w) {
+          var wk = SEED.weeks.filter(function (x) { return x.w === w; })[0];
+          return '<div class="small muted" style="margin:.6rem 0 .3rem">W' + w + '　' + esc(wk ? wk.t : '') + '</div>' +
+            byWeek[w].map(function (m) { return missionCard(m, st, dim); }).join('');
+        }).join('');
+    }
+
+    out += section('今週の課題', now, false, '');
+    if (!now.length) {
+      out += '<div class="card"><p class="small">W' + st.week + ' にラボ課題はありません。' +
+        'この週は実機ハンズオンと講義が中心です（<span class="mono">hands-on/</span> を参照）。</p></div>';
+    }
+    out += section('復習できる課題（学習済みの週）', past, false, '');
+    out += section('この先の課題', future, true,
+      'まだ学んでいない論点です。先に解いても構いませんが、解説の意味が取りづらいはずです。');
+    return out;
   }
 
   /* =========================================================
@@ -1638,6 +1697,7 @@ SEED.weeks = [
       return false;
     }
     if (d.mastery) { S.setMastery(d.mastery, +el.value); return true; }
+    if (d.week) { S.setWeek(+el.value); return true; }
     if (d.cfg) {
       var path = d.cfg.split('.');
       cfg[path[0]][path[1]] = num(el.value, cfg[path[0]][path[1]]);
