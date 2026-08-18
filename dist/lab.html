@@ -1,0 +1,1601 @@
+<title>SAP FI 実習ラボ</title>
+<style>
+:root{
+  --bg:#f6f7f9; --panel:#ffffff; --panel2:#eef1f5; --line:#d9dee6;
+  --fg:#1b2430; --muted:#5f6b7a; --accent:#0a6ed1; --accent2:#0854a0;
+  --ok:#1a7f4b; --okbg:#e6f4ec; --warn:#a86400; --warnbg:#fdf3e0;
+  --err:#b02a2a; --errbg:#fdeaea; --gold:#b07d1a;
+  --req:#b02a2a; --opt:#5f6b7a; --sup:#8a94a0;
+  --radius:10px; --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#12161c; --panel:#1a2029; --panel2:#222a35; --line:#333d4b;
+    --fg:#e6ebf2; --muted:#96a2b3; --accent:#5aa9f0; --accent2:#8cc4f7;
+    --ok:#66d19e; --okbg:#12301f; --warn:#e8b45c; --warnbg:#33270f;
+    --err:#ff8a8a; --errbg:#3a1a1a; --gold:#e3c37a;
+    --req:#ff8a8a; --opt:#96a2b3; --sup:#66707e;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#12161c; --panel:#1a2029; --panel2:#222a35; --line:#333d4b;
+  --fg:#e6ebf2; --muted:#96a2b3; --accent:#5aa9f0; --accent2:#8cc4f7;
+  --ok:#66d19e; --okbg:#12301f; --warn:#e8b45c; --warnbg:#33270f;
+  --err:#ff8a8a; --errbg:#3a1a1a; --gold:#e3c37a;
+  --req:#ff8a8a; --opt:#96a2b3; --sup:#66707e;
+}
+
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);
+  font-family:"Hiragino Kaku Gothic ProN","Yu Gothic UI","Noto Sans JP",system-ui,sans-serif;
+  font-size:14px;line-height:1.7}
+a{color:var(--accent)}
+h1,h2,h3{line-height:1.35;margin:0 0 .5em}
+h1{font-size:1.35rem}h2{font-size:1.1rem}h3{font-size:.95rem}
+
+header.top{position:sticky;top:0;z-index:20;background:var(--panel);
+  border-bottom:1px solid var(--line);padding:.5rem 1rem;display:flex;
+  align-items:center;gap:1rem;flex-wrap:wrap}
+.brand{font-weight:700;letter-spacing:.02em;white-space:nowrap}
+.brand small{display:block;font-weight:400;color:var(--muted);font-size:.7rem;letter-spacing:0}
+nav{display:flex;gap:.25rem;flex-wrap:wrap;flex:1}
+nav button{background:transparent;border:1px solid transparent;color:var(--muted);
+  padding:.4rem .7rem;border-radius:var(--radius);cursor:pointer;font-size:.85rem;font-family:inherit}
+nav button:hover{background:var(--panel2);color:var(--fg)}
+nav button.active{background:var(--accent);color:#fff;font-weight:600}
+.hud{display:flex;gap:.75rem;align-items:center;font-size:.8rem;white-space:nowrap}
+.hud .chip{background:var(--panel2);border:1px solid var(--line);border-radius:999px;padding:.15rem .6rem}
+.hud .chip b{color:var(--accent)}
+
+main{max-width:1120px;margin:0 auto;padding:1.25rem 1rem 4rem}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+  padding:1rem;margin-bottom:1rem}
+.grid{display:grid;gap:1rem}
+.g2{grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}
+.g3{grid-template-columns:repeat(auto-fit,minmax(210px,1fr))}
+.muted{color:var(--muted)}
+.small{font-size:.8rem}
+.mono{font-family:var(--mono)}
+
+button.btn{background:var(--accent);color:#fff;border:0;border-radius:var(--radius);
+  padding:.5rem .9rem;cursor:pointer;font-family:inherit;font-size:.85rem;font-weight:600}
+button.btn:hover{background:var(--accent2)}
+button.btn.ghost{background:transparent;color:var(--accent);border:1px solid var(--line)}
+button.btn.sm{padding:.25rem .55rem;font-size:.78rem}
+button.btn:disabled{opacity:.45;cursor:not-allowed}
+
+input,select,textarea{background:var(--bg);color:var(--fg);border:1px solid var(--line);
+  border-radius:6px;padding:.35rem .5rem;font-family:inherit;font-size:.85rem;width:100%}
+input:focus,select:focus{outline:2px solid var(--accent);outline-offset:-1px}
+label.f{display:block;font-size:.75rem;color:var(--muted);margin-bottom:.15rem}
+.field{margin-bottom:.5rem}
+
+.bar{height:8px;background:var(--panel2);border-radius:999px;overflow:hidden}
+.bar>i{display:block;height:100%;background:var(--accent)}
+
+.tag{display:inline-block;font-size:.7rem;padding:.05rem .4rem;border-radius:4px;
+  border:1px solid var(--line);color:var(--muted)}
+.tag.req{color:var(--req);border-color:var(--req)}
+.tag.sup{color:var(--sup);border-color:var(--sup)}
+.tag.ok{color:var(--ok);border-color:var(--ok)}
+.tag.core{color:var(--gold);border-color:var(--gold);font-weight:700}
+
+.msg{border-radius:8px;padding:.6rem .8rem;margin:.4rem 0;font-size:.85rem}
+.msg.err{background:var(--errbg);border-left:3px solid var(--err)}
+.msg.ok{background:var(--okbg);border-left:3px solid var(--ok)}
+.msg.warn{background:var(--warnbg);border-left:3px solid var(--warn)}
+.msg .hint{display:block;color:var(--muted);font-size:.8rem;margin-top:.3rem}
+
+.tblwrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:.8rem;min-width:520px}
+th,td{border-bottom:1px solid var(--line);padding:.35rem .5rem;text-align:left;white-space:nowrap}
+th{color:var(--muted);font-weight:600;font-size:.72rem;text-transform:uppercase;letter-spacing:.03em}
+tr.auto td{background:var(--panel2);font-style:italic}
+td.num{text-align:right;font-family:var(--mono)}
+
+.line{border:1px solid var(--line);border-radius:var(--radius);padding:.75rem;margin-bottom:.6rem;
+  background:var(--panel2)}
+.line-head{display:flex;gap:.5rem;align-items:center;margin-bottom:.5rem;flex-wrap:wrap}
+.line-head .no{font-weight:700;color:var(--muted);font-size:.8rem}
+.fs-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:.5rem}
+
+.trace{font-size:.8rem}
+.trace li{margin-bottom:.4rem}
+.trace .t-set{font-weight:600}
+.trace .t-tcode{font-family:var(--mono);font-size:.72rem;color:var(--accent);
+  border:1px solid var(--line);border-radius:4px;padding:0 .3rem;margin-left:.3rem}
+
+.tree{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:.5rem}
+.node{border:1px solid var(--line);border-radius:var(--radius);padding:.6rem;background:var(--panel2)}
+.node.done{border-color:var(--ok);background:var(--okbg)}
+.node .w{font-size:.7rem;color:var(--muted)}
+.node .t{font-size:.82rem;font-weight:600}
+
+.mission{border:1px solid var(--line);border-radius:var(--radius);padding:.8rem;margin-bottom:.6rem}
+.mission.done{border-color:var(--ok)}
+.mission h3{margin-bottom:.25rem}
+details summary{cursor:pointer;color:var(--accent);font-size:.82rem}
+
+.quiz-choice{display:block;width:100%;text-align:left;background:var(--panel2);
+  border:1px solid var(--line);border-radius:8px;padding:.6rem .8rem;margin-bottom:.4rem;
+  cursor:pointer;font-family:inherit;font-size:.88rem;color:var(--fg)}
+.quiz-choice:hover{border-color:var(--accent)}
+.quiz-choice.right{background:var(--okbg);border-color:var(--ok)}
+.quiz-choice.wrong{background:var(--errbg);border-color:var(--err)}
+
+.stat{text-align:center;padding:.6rem}
+.stat b{display:block;font-size:1.5rem;color:var(--accent);font-family:var(--mono)}
+.stat span{font-size:.72rem;color:var(--muted)}
+
+.flash{position:fixed;left:50%;transform:translateX(-50%);bottom:1.5rem;z-index:50;
+  background:var(--accent);color:#fff;padding:.6rem 1.2rem;border-radius:999px;
+  font-size:.9rem;font-weight:600;box-shadow:0 6px 24px rgba(0,0,0,.25)}
+
+</style>
+<header class="top">
+  <div class="brand">SAP FI 実習ラボ<small>設定と挙動の因果を、手で確かめる</small></div>
+  <nav>
+    <button data-nav="home">ホーム</button>
+    <button data-nav="lab">転記ラボ</button>
+    <button data-nav="img">IMG（設定）</button>
+    <button data-nav="missions">ミッション</button>
+    <button data-nav="drill">ドリル</button>
+  </nav>
+  <div class="hud" id="hud"></div>
+</header>
+<main id="view"></main>
+<div class="flash" id="flash" style="display:none"></div>
+<script>
+/* =========================================================
+   SAP FI 学習プラットフォーム : マスタ／設定データ
+   実機で試せない「設定 → 挙動」の因果を再現するための定義。
+   ここの値はユーザーが画面から書き換えられる（＝IMG のつもり）。
+   ========================================================= */
+
+var SEED = {};
+if (typeof window !== "undefined") window.SEED = SEED;
+
+/* ---------- 会計期間（OB52 相当） ---------- */
+SEED.periodControl = {
+  fiscalYear: 2026,
+  openFrom: 1,
+  openTo: 12,
+  note: '転記日付がオープン期間外ならエラー。実機の OB52 に相当する。'
+};
+
+/* ---------- 番号範囲（FBN1 相当） ---------- */
+SEED.numberRanges = {
+  '01': { from: 1000000000, to: 1099999999, current: 1000000000, ext: false },
+  '18': { from: 1800000000, to: 1899999999, current: 1800000000, ext: false },
+  '19': { from: 1900000000, to: 1999999999, current: 1900000000, ext: false },
+  '15': { from: 1500000000, to: 1599999999, current: 1500000000, ext: false }
+};
+
+/* ---------- 伝票タイプ（OBA7 相当） ---------- */
+SEED.docTypes = {
+  SA: { text: '総勘定元帳伝票', range: '01', accountTypes: ['S','A'],
+        refRequired: false, headerTextRequired: false, negativePosting: false,
+        hint: '最も汎用的な振替伝票。得意先／仕入先は転記できない設定が一般的。' },
+  AB: { text: '振替伝票（全般）', range: '01', accountTypes: ['S','A','D','K'],
+        refRequired: false, headerTextRequired: false, negativePosting: false,
+        hint: '全勘定タイプを許可。何でも通るぶん、統制は弱い。' },
+  KR: { text: '仕入先請求', range: '19', accountTypes: ['K','S','A'],
+        refRequired: true, headerTextRequired: false, negativePosting: false,
+        hint: '参照番号必須。実務では請求書番号を入れさせ、二重計上を防ぐ。' },
+  KZ: { text: '仕入先支払', range: '15', accountTypes: ['K','S'],
+        refRequired: false, headerTextRequired: false, negativePosting: false,
+        hint: '支払処理（F110／F-53）が生成する伝票タイプ。' },
+  DR: { text: '得意先請求', range: '18', accountTypes: ['D','S'],
+        refRequired: true, headerTextRequired: false, negativePosting: false,
+        hint: 'SD からの請求連動でも使われる。' },
+  DZ: { text: '入金', range: '15', accountTypes: ['D','S'],
+        refRequired: false, headerTextRequired: false, negativePosting: false,
+        hint: '入金消込（F-28）が生成する。' }
+};
+
+/* ---------- 転記キー（OB41 相当） ---------- */
+/* fs = 転記キー側の項目ステータス。勘定側 FSG と「リンク」して合成される。 */
+SEED.postingKeys = {
+  '40': { text: '総勘定元帳 借方', dc: 'D', acctType: 'S',
+          fs: { text:'opt', assignment:'opt', costCenter:'opt', profitCenter:'opt',
+                paymentTerms:'sup', paymentMethod:'sup', businessArea:'opt', quantity:'opt' } },
+  '50': { text: '総勘定元帳 貸方', dc: 'C', acctType: 'S',
+          fs: { text:'opt', assignment:'opt', costCenter:'opt', profitCenter:'opt',
+                paymentTerms:'sup', paymentMethod:'sup', businessArea:'opt', quantity:'opt' } },
+  '01': { text: '得意先 請求', dc: 'D', acctType: 'D',
+          fs: { text:'opt', assignment:'opt', costCenter:'sup', profitCenter:'sup',
+                paymentTerms:'opt', paymentMethod:'opt', businessArea:'opt', quantity:'sup' } },
+  '11': { text: '得意先 貸方記入', dc: 'C', acctType: 'D',
+          fs: { text:'opt', assignment:'opt', costCenter:'sup', profitCenter:'sup',
+                paymentTerms:'opt', paymentMethod:'opt', businessArea:'opt', quantity:'sup' } },
+  '15': { text: '得意先 入金', dc: 'C', acctType: 'D',
+          fs: { text:'opt', assignment:'opt', costCenter:'sup', profitCenter:'sup',
+                paymentTerms:'sup', paymentMethod:'opt', businessArea:'opt', quantity:'sup' } },
+  '21': { text: '仕入先 借方記入', dc: 'D', acctType: 'K',
+          fs: { text:'opt', assignment:'opt', costCenter:'sup', profitCenter:'sup',
+                paymentTerms:'opt', paymentMethod:'opt', businessArea:'opt', quantity:'sup' } },
+  '25': { text: '仕入先 支払', dc: 'D', acctType: 'K',
+          fs: { text:'opt', assignment:'opt', costCenter:'sup', profitCenter:'sup',
+                paymentTerms:'sup', paymentMethod:'opt', businessArea:'opt', quantity:'sup' } },
+  '31': { text: '仕入先 請求', dc: 'C', acctType: 'K',
+          fs: { text:'opt', assignment:'opt', costCenter:'sup', profitCenter:'sup',
+                paymentTerms:'opt', paymentMethod:'opt', businessArea:'opt', quantity:'sup' } },
+  '70': { text: '資産 借方', dc: 'D', acctType: 'A',
+          fs: { text:'opt', assignment:'opt', costCenter:'sup', profitCenter:'sup',
+                paymentTerms:'sup', paymentMethod:'sup', businessArea:'opt', quantity:'opt' } },
+  '75': { text: '資産 貸方', dc: 'C', acctType: 'A',
+          fs: { text:'opt', assignment:'opt', costCenter:'sup', profitCenter:'sup',
+                paymentTerms:'sup', paymentMethod:'sup', businessArea:'opt', quantity:'opt' } }
+};
+
+/* ---------- 項目ステータスグループ（OBC4 相当） ---------- */
+SEED.fieldStatusGroups = {
+  G001: { text: '一般（税勘定なし）',
+          fs: { text:'req', assignment:'opt', costCenter:'opt', profitCenter:'opt',
+                paymentTerms:'sup', paymentMethod:'sup', businessArea:'opt', quantity:'opt' } },
+  G004: { text: '原価勘定',
+          fs: { text:'req', assignment:'opt', costCenter:'req', profitCenter:'opt',
+                paymentTerms:'sup', paymentMethod:'sup', businessArea:'opt', quantity:'sup' } },
+  G005: { text: '銀行勘定（消込あり）',
+          fs: { text:'opt', assignment:'req', costCenter:'sup', profitCenter:'sup',
+                paymentTerms:'sup', paymentMethod:'opt', businessArea:'opt', quantity:'sup' } },
+  G029: { text: '売上勘定',
+          fs: { text:'req', assignment:'opt', costCenter:'sup', profitCenter:'req',
+                paymentTerms:'sup', paymentMethod:'sup', businessArea:'opt', quantity:'opt' } },
+  G067: { text: '調整勘定／自動転記のみ',
+          fs: { text:'opt', assignment:'opt', costCenter:'sup', profitCenter:'sup',
+                paymentTerms:'opt', paymentMethod:'opt', businessArea:'opt', quantity:'sup' } }
+};
+
+SEED.fieldLabels = {
+  text: '明細テキスト', assignment: '割当', costCenter: '原価センタ',
+  profitCenter: '利益センタ', paymentTerms: '支払条件', paymentMethod: '支払方法',
+  businessArea: '事業領域', quantity: '数量'
+};
+
+/* ---------- G/L 勘定マスタ（FS00 相当） ---------- */
+SEED.glAccounts = {
+  '113100': { text:'普通預金', type:'S', fsg:'G005', openItem:true,  taxCat:'',  autoOnly:false, recon:'' },
+  '121000': { text:'売掛金（調整勘定）', type:'S', fsg:'G067', openItem:false, taxCat:'', autoOnly:true, recon:'D' },
+  '175000': { text:'仮払消費税', type:'S', fsg:'G067', openItem:false, taxCat:'-', autoOnly:true, recon:'' },
+  '175010': { text:'仮受消費税', type:'S', fsg:'G067', openItem:false, taxCat:'+', autoOnly:true, recon:'' },
+  '211000': { text:'買掛金（調整勘定）', type:'S', fsg:'G067', openItem:false, taxCat:'', autoOnly:true, recon:'K' },
+  '400000': { text:'売上高', type:'S', fsg:'G029', openItem:false, taxCat:'+', autoOnly:false, recon:'' },
+  '500000': { text:'仕入高', type:'S', fsg:'G001', openItem:false, taxCat:'-', autoOnly:false, recon:'' },
+  '610000': { text:'旅費交通費', type:'S', fsg:'G004', openItem:false, taxCat:'-', autoOnly:false, recon:'' },
+  '620000': { text:'支払手数料', type:'S', fsg:'G004', openItem:false, taxCat:'-', autoOnly:false, recon:'' },
+  '999999': { text:'未処理勘定', type:'S', fsg:'G001', openItem:true, taxCat:'', autoOnly:false, recon:'' }
+};
+
+/* ---------- 取引先マスタ（BP 相当） ---------- */
+SEED.partners = {
+  'V-1001': { text:'（架空）部材サプライヤ A', type:'K', recon:'211000', terms:'N030' },
+  'V-1002': { text:'（架空）物流サービス B',   type:'K', recon:'211000', terms:'N060' },
+  'C-2001': { text:'（架空）販売代理店 X',     type:'D', recon:'121000', terms:'N030' },
+  'C-2002': { text:'（架空）量販店 Y',         type:'D', recon:'121000', terms:'N045' }
+};
+
+/* ---------- 消費税コード（FTXP 相当） ---------- */
+SEED.taxCodes = {
+  V0: { text:'課税対象外（仕入）', rate:0,  dir:'input',  account:'' },
+  V1: { text:'課税仕入 10%',      rate:10, dir:'input',  account:'175000' },
+  V2: { text:'課税仕入 8%（軽減）', rate:8, dir:'input',  account:'175000' },
+  A0: { text:'課税対象外（売上）', rate:0,  dir:'output', account:'' },
+  A1: { text:'課税売上 10%',      rate:10, dir:'output', account:'175010' }
+};
+
+/* ---------- 原価センタ／利益センタ ---------- */
+SEED.costCenters   = { 'CC1000':'管理部門', 'CC2000':'営業部門', 'CC3000':'製造部門' };
+SEED.profitCenters = { 'PC1000':'国内事業', 'PC2000':'海外事業' };
+SEED.paymentTerms  = { 'N000':'即時', 'N030':'月末締め翌月末', 'N045':'45日', 'N060':'60日' };
+SEED.paymentMethods= { 'T':'銀行振込', 'B':'手形', 'D':'口座振替' };
+
+/* ---------- カリキュラム（スキルツリー） ---------- */
+SEED.weeks = [
+  { w:1,  d:'A-1', t:'FI 全体像・組織構造',        g:'会社コード／原価管理領域／元帳／通貨の関係を図示して説明できる' },
+  { w:2,  d:'A-1', t:'Universal Journal と GL マスタ', g:'ACDOCA 一元化の意味と、勘定マスタの各項目が何に効くかを説明できる' },
+  { w:3,  d:'A-1', t:'伝票制御①（構造）',           g:'伝票タイプ・転記キー・項目ステータスの三者関係を設計できる' },
+  { w:4,  d:'A-1', t:'伝票制御②（自動処理）',       g:'自動転記・為替換算・振替・消込の仕組みを説明できる' },
+  { w:5,  d:'A-2', t:'AP（債務）',                  g:'仕入先マスタ・請求計上・支払プログラム F110 を一人称で回せる' },
+  { w:6,  d:'A-2', t:'MM-FI 連携',                  g:'発注〜入庫〜請求照合の仕訳と GR/IR・価格差異を説明できる' },
+  { w:7,  d:'A-2', t:'AR（債権）と SD-FI',          g:'得意先マスタ・請求・入金消込・販売連動を説明できる' },
+  { w:8,  d:'A-4', t:'AA（固定資産）',              g:'償却領域・資産クラス・取得／除却／償却実行を説明・実行できる' },
+  { w:9,  d:'A-4', t:'銀行会計・日本固有',          g:'支払方法・銀行勘定・消費税・インボイス制度を説明できる' },
+  { w:10, d:'A-3', t:'月次・年次決算',              g:'決算プロセス全体を一人称で回し、CO 連携まで説明できる' },
+  { w:11, d:'B-1', t:'不具合調査',                  g:'伝票番号から原因を切り分ける調査ルートを確立する' },
+  { w:12, d:'B-2', t:'統合演習（Fit&Gap）',         g:'設計判断と根拠を文書化し、レビューに耐える' }
+];
+
+/* =========================================================
+   転記エンジン
+   SAP FI の伝票転記チェックを簡略再現する。
+   最大の狙いは trace[]：どの IMG 設定がその挙動を引き起こしたかを
+   毎回明示すること。「設定 → 挙動」の因果を可視化する。
+   ========================================================= */
+(function (root) {
+  'use strict';
+
+  var FS_LABEL = { req: '必須入力', opt: '任意入力', sup: '抑止' };
+
+  /* 転記キー側と勘定 FSG 側の項目ステータスを「リンク」して合成する。
+     SAP の実挙動：抑止と必須が衝突すると転記できない（設定矛盾）。 */
+  function mergeFS(a, b) {
+    if (a === b) return { v: a, conflict: false };
+    var pair = [a, b];
+    if (pair.indexOf('sup') >= 0 && pair.indexOf('req') >= 0) return { v: 'req', conflict: true };
+    if (pair.indexOf('sup') >= 0) return { v: 'sup', conflict: false };
+    if (pair.indexOf('req') >= 0) return { v: 'req', conflict: false };
+    return { v: 'opt', conflict: false };
+  }
+
+  /* 1 明細の全項目について合成後ステータスを返す */
+  function resolveFieldStatus(cfg, pkCode, fsgCode) {
+    var pk = cfg.postingKeys[pkCode];
+    var fsg = cfg.fieldStatusGroups[fsgCode];
+    var out = {};
+    if (!pk || !fsg) return out;
+    Object.keys(cfg.fieldLabels).forEach(function (f) {
+      var a = pk.fs[f] || 'opt';
+      var b = fsg.fs[f] || 'opt';
+      var m = mergeFS(a, b);
+      out[f] = { pk: a, fsg: b, value: m.v, conflict: m.conflict };
+    });
+    return out;
+  }
+
+  function money(n) { return Math.round(n * 100) / 100; }
+
+  /* 明細から実際に転記される G/L 勘定を求める。
+     得意先／仕入先明細は「取引先マスタの調整勘定」に転記される。 */
+  function resolveAccount(cfg, line) {
+    var pk = cfg.postingKeys[line.pk];
+    if (!pk) return null;
+    if (pk.acctType === 'D' || pk.acctType === 'K') {
+      var bp = cfg.partners[line.partner];
+      return bp ? bp.recon : null;
+    }
+    return line.account;
+  }
+
+  /* ---------------- 本体 ---------------- */
+  function post(cfg, header, lines) {
+    var errors = [], warnings = [], trace = [];
+
+    function err(code, msg, hint) { errors.push({ code: code, msg: msg, hint: hint || '' }); }
+    function tr(setting, tcode, effect) { trace.push({ setting: setting, tcode: tcode, effect: effect }); }
+
+    /* --- 伝票タイプ --- */
+    var dt = cfg.docTypes[header.docType];
+    if (!dt) { err('DT001', '伝票タイプ ' + header.docType + ' が定義されていません。'); return fail(); }
+    tr('伝票タイプ ' + header.docType + '（' + dt.text + '）', 'OBA7',
+       '許可勘定タイプ = ' + dt.accountTypes.join('/') + '、番号範囲 = ' + dt.range +
+       '、参照番号 = ' + (dt.refRequired ? '必須' : '任意'));
+
+    if (dt.refRequired && !header.reference) {
+      err('DT002', '参照番号が未入力です。',
+          '伝票タイプ ' + header.docType + ' は OBA7 で「参照番号必須」に設定されています。設定を外せば転記できますが、請求書の二重計上を防ぐ統制が失われます。');
+    }
+
+    /* --- 会計期間 --- */
+    var d = header.postingDate ? new Date(header.postingDate) : null;
+    if (!d || isNaN(d)) { err('PD001', '転記日付が不正です。'); }
+    else {
+      var period = d.getMonth() + 1, year = d.getFullYear();
+      var pc = cfg.periodControl;
+      tr('会計期間管理', 'OB52',
+         '会計年度 ' + pc.fiscalYear + ' の期間 ' + pc.openFrom + '〜' + pc.openTo + ' がオープン');
+      if (year !== pc.fiscalYear || period < pc.openFrom || period > pc.openTo) {
+        err('PD002', '転記日付 ' + header.postingDate + ' は締められた期間です（期間 ' + period + '/' + year + '）。',
+            'OB52 のオープン期間外。実務では決算締め後の遡及転記でこのエラーに遭遇します。');
+      }
+      header._period = period;
+      header._year = year;
+    }
+
+    if (!lines || lines.length < 2) err('LN001', '明細が 2 行以上必要です。');
+
+    /* --- 明細チェック --- */
+    var debit = 0, credit = 0;
+    var posted = [];
+    var autoLines = [];
+
+    (lines || []).forEach(function (ln, i) {
+      var no = i + 1;
+      var pk = cfg.postingKeys[ln.pk];
+      if (!pk) { err('PK001', '[明細' + no + '] 転記キー ' + ln.pk + ' が未定義です。'); return; }
+
+      /* 伝票タイプ × 勘定タイプ */
+      if (dt.accountTypes.indexOf(pk.acctType) < 0) {
+        err('DT003', '[明細' + no + '] 勘定タイプ ' + pk.acctType + ' は伝票タイプ ' + header.docType + ' では転記できません。',
+            'OBA7 の「許可勘定タイプ」による制限。転記キー ' + ln.pk + ' は勘定タイプ ' + pk.acctType + ' 用です。伝票タイプを ' +
+            Object.keys(cfg.docTypes).filter(function (k) { return cfg.docTypes[k].accountTypes.indexOf(pk.acctType) >= 0; }).join('/') +
+            ' に変えるか、OBA7 で許可勘定タイプを追加します。');
+        return;
+      }
+
+      var acct = resolveAccount(cfg, ln);
+      if (!acct) {
+        err('AC001', '[明細' + no + '] 勘定／取引先が未指定です。');
+        return;
+      }
+      var gl = cfg.glAccounts[acct];
+      if (!gl) { err('AC002', '[明細' + no + '] G/L 勘定 ' + acct + ' が存在しません。'); return; }
+
+      if (pk.acctType === 'D' || pk.acctType === 'K') {
+        tr('取引先 ' + ln.partner + ' の調整勘定', 'BP / FD02・FK02',
+           '明細' + no + ' は取引先マスタの調整勘定 ' + acct + '（' + gl.text + '）へ自動転記');
+      } else {
+        /* 手入力できない勘定の判定 */
+        if (gl.recon) {
+          err('AC003', '[明細' + no + '] ' + acct + ' は調整勘定のため直接転記できません。',
+              'G/L 勘定マスタ（FS00）の「調整勘定の勘定タイプ = ' + gl.recon + '」による制限。得意先／仕入先明細として転記すれば、この勘定へ自動的に記帳されます。');
+          return;
+        }
+        if (gl.autoOnly) {
+          err('AC004', '[明細' + no + '] ' + acct + ' は「自動転記のみ」勘定です。手入力できません。',
+              'FS00 の「自動転記のみ」チェックによる制限。税額行のようにシステムが生成する場合のみ記帳されます。');
+          return;
+        }
+      }
+
+      /* 項目ステータスの合成 */
+      var fs = resolveFieldStatus(cfg, ln.pk, gl.fsg);
+      tr('項目ステータス合成（明細' + no + '）', 'OB41 × OBC4',
+         '転記キー ' + ln.pk + ' の項目ステータス と 勘定 ' + acct + ' の FSG ' + gl.fsg + ' をリンク');
+
+      Object.keys(fs).forEach(function (f) {
+        var st = fs[f], val = (ln.fields || {})[f];
+        var label = cfg.fieldLabels[f];
+        if (st.conflict) {
+          err('FS001', '[明細' + no + '] 項目「' + label + '」の設定が矛盾しています（転記キー側=' +
+              FS_LABEL[st.pk] + ' ／ 勘定 FSG 側=' + FS_LABEL[st.fsg] + '）。',
+              '抑止と必須は両立できません。OB41（転記キー ' + ln.pk + '）か OBC4（FSG ' + gl.fsg + '）のどちらかを直す必要があります。実プロジェクトで頻出する設定不整合です。');
+          return;
+        }
+        if (st.value === 'req' && !val) {
+          err('FS002', '[明細' + no + '] 項目「' + label + '」は必須入力です。',
+              '必須の由来：' + (st.pk === 'req' ? '転記キー ' + ln.pk + '（OB41）' : '') +
+              (st.pk === 'req' && st.fsg === 'req' ? ' と ' : '') +
+              (st.fsg === 'req' ? '勘定 ' + acct + ' の FSG ' + gl.fsg + '（OBC4）' : '') + '。');
+        }
+        if (st.value === 'sup' && val) {
+          err('FS003', '[明細' + no + '] 項目「' + label + '」は抑止されており入力できません。',
+              '抑止の由来：' + (st.pk === 'sup' ? '転記キー ' + ln.pk + '（OB41）' : '') +
+              (st.pk === 'sup' && st.fsg === 'sup' ? ' と ' : '') +
+              (st.fsg === 'sup' ? '勘定 ' + acct + ' の FSG ' + gl.fsg + '（OBC4）' : '') + '。');
+        }
+      });
+
+      var amt = Number(ln.amount) || 0;
+      if (amt <= 0) err('AM001', '[明細' + no + '] 金額は正の数で入力します（貸借は転記キーが決めます）。');
+
+      /* --- 消費税：内税／外税で「入力額の意味」が変わる --- */
+      var baseAmt = amt, taxRec = null;
+      if (ln.taxCode) {
+        var tx = cfg.taxCodes[ln.taxCode];
+        if (!tx) {
+          err('TX001', '[明細' + no + '] 税コード ' + ln.taxCode + ' が未定義です。');
+        } else {
+          if (gl.taxCat === '' && pk.acctType === 'S') {
+            warnings.push('[明細' + no + '] 勘定 ' + acct + ' には税カテゴリが未設定です（FS00）。実機ではこの勘定に税コードを入力できません。');
+          }
+          if (tx.rate > 0 && tx.account) {
+            var taxAmt;
+            if (ln.taxIncl) {
+              taxAmt = money(amt * tx.rate / (100 + tx.rate));
+              baseAmt = money(amt - taxAmt);
+              tr('税額計算：内税（税込金額入力）', 'FB60 の「税額計算」チェック',
+                 '明細' + no + '：入力 ' + amt + ' を 税抜 ' + baseAmt + ' ＋ 税 ' + taxAmt + ' に分解');
+            } else {
+              taxAmt = money(amt * tx.rate / 100);
+              baseAmt = amt;
+              tr('税額計算：外税（税抜金額入力）', 'FB60 の「税額計算」チェック',
+                 '明細' + no + '：入力 ' + amt + ' を税抜とみなし、税 ' + taxAmt + ' を上乗せ');
+            }
+            taxRec = {
+              no: 0, pk: tx.dir === 'input' ? '40' : '50', dc: tx.dir === 'input' ? 'D' : 'C',
+              acctType: 'S', account: tx.account, accountText: cfg.glAccounts[tx.account].text,
+              partner: '', amount: taxAmt, taxCode: ln.taxCode, fields: {}, auto: true, fsg: '-',
+              note: '税コード ' + ln.taxCode + '（' + tx.rate + '%）による自動転記'
+            };
+            tr('税コード ' + ln.taxCode + ' の自動転記勘定', 'FTXP / OB40',
+               tx.account + '（' + cfg.glAccounts[tx.account].text + '）へ ' + taxAmt + ' を自動生成');
+          }
+        }
+      }
+
+      if (pk.dc === 'D') debit += baseAmt; else credit += baseAmt;
+
+      posted.push({
+        no: no, pk: ln.pk, dc: pk.dc, acctType: pk.acctType, account: acct,
+        accountText: gl.text, partner: ln.partner || '', amount: baseAmt,
+        inputAmount: amt, taxCode: ln.taxCode || '', taxIncl: !!ln.taxIncl,
+        fields: ln.fields || {}, auto: false, fsg: gl.fsg
+      });
+
+      if (taxRec) {
+        autoLines.push(taxRec);
+        if (taxRec.dc === 'D') debit += taxRec.amount; else credit += taxRec.amount;
+      }
+    });
+
+    /* --- 貸借バランス --- */
+    debit = money(debit); credit = money(credit);
+    if (errors.length === 0 && debit !== credit) {
+      err('BL001', '貸借が一致しません（借方 ' + debit + ' ／ 貸方 ' + credit + ' ／ 差額 ' + money(debit - credit) + '）。',
+          '税コードを使った場合、税額行も貸借に含まれます。内税か外税かで入力すべき金額が変わる点に注意。');
+    }
+
+    if (errors.length) return fail();
+
+    /* --- 採番して転記 --- */
+    var rng = cfg.numberRanges[dt.range];
+    var belnr = String(rng.current);
+    rng.current = rng.current + 1;
+    tr('番号範囲 ' + dt.range, 'FBN1',
+       '伝票番号 ' + belnr + ' を採番（範囲 ' + rng.from + '〜' + rng.to + '）');
+
+    var all = posted.concat(autoLines).map(function (l, i) {
+      l.buzei = String(i + 1).padStart(3, '0');
+      return l;
+    });
+
+    var bkpf = {
+      BUKRS: cfg.companyCode || '1000', BELNR: belnr, GJAHR: header._year,
+      BLART: header.docType, BLDAT: header.docDate || header.postingDate,
+      BUDAT: header.postingDate, MONAT: header._period, WAERS: header.currency || 'JPY',
+      XBLNR: header.reference || '', BKTXT: header.headerText || '',
+      USNAM: 'LEARNER', TCODE: 'FB01'
+    };
+
+    var bseg = all.map(function (l) {
+      return {
+        BELNR: belnr, BUZEI: l.buzei, BSCHL: l.pk, KOART: l.acctType,
+        HKONT: l.account, LIFNR: l.acctType === 'K' ? l.partner : '',
+        KUNNR: l.acctType === 'D' ? l.partner : '',
+        SHKZG: l.dc === 'D' ? 'S' : 'H', WRBTR: l.amount, MWSKZ: l.taxCode,
+        ZUONR: l.fields.assignment || '', SGTXT: l.fields.text || '',
+        KOSTL: l.fields.costCenter || '', PRCTR: l.fields.profitCenter || '',
+        AUTO: l.auto ? 'X' : ''
+      };
+    });
+
+    var acdoca = all.map(function (l) {
+      return {
+        RLDNR: '0L', RBUKRS: bkpf.BUKRS, GJAHR: bkpf.GJAHR, BELNR: belnr, DOCLN: l.buzei,
+        RACCT: l.account, DRCRK: l.dc === 'D' ? 'S' : 'H',
+        HSL: (l.dc === 'D' ? 1 : -1) * l.amount,
+        RCNTR: l.fields.costCenter || '', PRCTR: l.fields.profitCenter || ''
+      };
+    });
+
+    tr('Universal Journal', 'ACDOCA',
+       'S/4HANA では BSEG／総勘定元帳／CO が ACDOCA に一元化される。上の ' + acdoca.length + ' 行が単一の真実。');
+
+    return { ok: true, errors: [], warnings: warnings, trace: trace,
+             belnr: belnr, bkpf: bkpf, bseg: bseg, acdoca: acdoca, lines: all };
+
+    function fail() {
+      return { ok: false, errors: errors, warnings: warnings, trace: trace };
+    }
+  }
+
+  root.ENGINE = { post: post, resolveFieldStatus: resolveFieldStatus, mergeFS: mergeFS, FS_LABEL: FS_LABEL };
+})(typeof window !== 'undefined' ? window : globalThis);
+
+/* =========================================================
+   進捗ストア：XP・レベル・連続学習日数・間隔反復・設定の永続化
+   すべて localStorage。エクスポートしてリポジトリに残せる。
+   ========================================================= */
+(function (root) {
+  'use strict';
+  var KEY = 'sapfi.v1';
+
+  var DOMAINS = {
+    'A-1': 'GL・組織構造・伝票制御',
+    'A-2': 'AP/AR と購買・販売連携',
+    'A-3': '月次・年次決算プロセス',
+    'A-4': 'AA固定資産・銀行・日本固有',
+    'B-1': '不具合調査・テーブル読解',
+    'B-2': 'Fit&Gap 設計判断'
+  };
+
+  var LEVELS = [0, 100, 250, 480, 800, 1250, 1850, 2600, 3550, 4700, 6100];
+
+  function today() { return new Date().toISOString().slice(0, 10); }
+  function addDays(iso, n) {
+    var d = new Date(iso + 'T00:00:00');
+    d.setDate(d.getDate() + n);
+    return d.toISOString().slice(0, 10);
+  }
+
+  function blank() {
+    return {
+      xp: 0,
+      streak: { last: '', count: 0, best: 0 },
+      missions: {},
+      drills: {},
+      mastery: { 'A-1': 0, 'A-2': 0, 'A-3': 0, 'A-4': 0, 'B-1': 0, 'B-2': 0 },
+      cfg: null,
+      docs: [],
+      log: []
+    };
+  }
+
+  var state = load();
+
+  function load() {
+    try {
+      var raw = localStorage.getItem(KEY);
+      if (!raw) return blank();
+      var o = JSON.parse(raw);
+      var b = blank();
+      Object.keys(b).forEach(function (k) { if (!(k in o)) o[k] = b[k]; });
+      return o;
+    } catch (e) { return blank(); }
+  }
+
+  function save() {
+    try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {}
+  }
+
+  function touchStreak() {
+    var t = today();
+    if (state.streak.last === t) return false;
+    if (state.streak.last === addDays(t, -1)) state.streak.count += 1;
+    else state.streak.count = 1;
+    state.streak.last = t;
+    if (state.streak.count > state.streak.best) state.streak.best = state.streak.count;
+    save();
+    return true;
+  }
+
+  function addXP(n, why) {
+    state.xp += n;
+    state.log.unshift({ at: new Date().toISOString(), xp: n, why: why });
+    state.log = state.log.slice(0, 200);
+    touchStreak();
+    save();
+    return n;
+  }
+
+  function level() {
+    var lv = 1;
+    for (var i = 0; i < LEVELS.length; i++) if (state.xp >= LEVELS[i]) lv = i + 1;
+    return lv;
+  }
+  function levelProgress() {
+    var lv = level();
+    var cur = LEVELS[lv - 1] || 0;
+    var next = LEVELS[lv] != null ? LEVELS[lv] : cur;
+    if (next === cur) return { cur: cur, next: next, pct: 100 };
+    return { cur: cur, next: next, pct: Math.round((state.xp - cur) / (next - cur) * 100) };
+  }
+
+  /* ---------- 間隔反復（SM-2 簡略版） ---------- */
+  function drillCard(id) {
+    if (!state.drills[id]) {
+      state.drills[id] = { ease: 2.3, interval: 0, due: today(), reps: 0, ok: 0, ng: 0 };
+    }
+    return state.drills[id];
+  }
+  function dueDrills(all) {
+    var t = today();
+    return all.filter(function (q) { return drillCard(q.id).due <= t; });
+  }
+  function gradeDrill(id, correct) {
+    var c = drillCard(id);
+    c.reps += 1;
+    if (correct) {
+      c.ok += 1;
+      c.ease = Math.min(2.8, c.ease + 0.1);
+      c.interval = c.interval === 0 ? 1 : (c.interval === 1 ? 3 : Math.round(c.interval * c.ease));
+    } else {
+      c.ng += 1;
+      c.ease = Math.max(1.3, c.ease - 0.25);
+      c.interval = 0;
+    }
+    c.due = addDays(today(), c.interval);
+    save();
+    return c;
+  }
+
+  function completeMission(id, xp) {
+    if (state.missions[id] && state.missions[id].done) return false;
+    state.missions[id] = { done: true, at: new Date().toISOString() };
+    addXP(xp, 'ミッション ' + id + ' 達成');
+    return true;
+  }
+
+  function setMastery(k, v) { state.mastery[k] = v; save(); }
+  function recordDoc(d) { state.docs.unshift(d); state.docs = state.docs.slice(0, 50); save(); }
+  function saveCfg(cfg) { state.cfg = cfg; save(); }
+  function reset() { state = blank(); save(); }
+
+  root.STORE = {
+    state: function () { return state; },
+    save: save, addXP: addXP, level: level, levelProgress: levelProgress,
+    touchStreak: touchStreak, drillCard: drillCard, dueDrills: dueDrills,
+    gradeDrill: gradeDrill, completeMission: completeMission,
+    setMastery: setMastery, recordDoc: recordDoc, saveCfg: saveCfg, reset: reset,
+    today: today, DOMAINS: DOMAINS, LEVELS: LEVELS
+  };
+})(typeof window !== 'undefined' ? window : globalThis);
+
+/* =========================================================
+   ミッション：達成条件つきの実践課題。
+   「設定を変えたら挙動が変わる」を自分の手で起こさせるのが狙い。
+   check(ctx) の ctx = { result, cfg, header, lines }
+   ========================================================= */
+(function (root) {
+  'use strict';
+
+  function has(bseg, acct, sh, amt) {
+    return bseg.some(function (b) {
+      return b.HKONT === acct && (!sh || b.SHKZG === sh) && (amt == null || Number(b.WRBTR) === amt);
+    });
+  }
+  function errHas(res, code) {
+    return (res.errors || []).some(function (e) { return e.code === code; });
+  }
+
+  root.MISSIONS = [
+    {
+      id: 'M01', week: 1, domain: 'A-1', xp: 30,
+      title: '原価センタの壁',
+      brief: '旅費交通費 610000 に 11,000 を計上し、普通預金 113100 から支払う SA 伝票を転記してください。',
+      hint: '610000 の項目ステータスグループは G004（原価勘定）です。IMG タブで G004 の設定を見て、何が必須かを確かめてから入力してください。',
+      lesson: '「原価センタが必須」は勘定マスタ（FS00）の FSG によって決まります。勘定ごとに入力統制を変えられる、というのが FI の基本設計思想です。',
+      check: function (c) {
+        if (!c.result.ok) return { pass: false, msg: 'まだ転記できていません。' };
+        return { pass: has(c.result.bseg, '610000', 'S', 11000) && has(c.result.bseg, '113100', 'H', 11000),
+                 msg: '610000 借方 11,000 と 113100 貸方 11,000 の組み合わせが必要です。' };
+      }
+    },
+    {
+      id: 'M02', week: 1, domain: 'A-1', xp: 30,
+      title: '統制を壊さずに通す',
+      brief: '伝票タイプ KR で仕入先 V-1001 への請求を転記してください。ただし OBA7 の「参照番号必須」は外さないこと。',
+      hint: '設定を緩めれば通りますが、それは統制の放棄です。要件を満たしたまま通す方法を考えてください。',
+      lesson: 'Fit&Gap では「エラーが出た → 設定を緩める」が最も安易な失敗です。その設定が何を守っているかを言えるかどうかが、設計者と操作者の分かれ目です。',
+      check: function (c) {
+        if (!c.result.ok) return { pass: false, msg: 'まだ転記できていません。' };
+        if (!c.cfg.docTypes.KR.refRequired) return { pass: false, msg: 'OBA7 の参照番号必須を外してしまっています。設定を戻してください。' };
+        return { pass: c.header.docType === 'KR' && !!c.header.reference,
+                 msg: '伝票タイプ KR ＋ 参照番号入力で転記してください。' };
+      }
+    },
+    {
+      id: 'M03', week: 2, domain: 'A-4', xp: 40,
+      title: '消費税を自動生成させる',
+      brief: '仕入高 500000 に税抜 10,000、税コード V1（10%）で計上し、仮払消費税 175000 に 1,000 を自動転記させてください。',
+      hint: '税コード欄に V1 を指定します。「税込入力」チェックの有無で、入力した金額の意味が変わります。',
+      lesson: '税額行は人が入力するのではなく、税コード（FTXP）と自動転記勘定（OB40）の設定からシステムが生成します。だから 175000 は「自動転記のみ」勘定なのです。',
+      check: function (c) {
+        if (!c.result.ok) return { pass: false, msg: 'まだ転記できていません。' };
+        return { pass: has(c.result.bseg, '175000', 'S', 1000) && has(c.result.bseg, '500000', 'S', 10000),
+                 msg: '仕入高 10,000（税抜）と 仮払消費税 1,000（自動）の 2 行が必要です。' };
+      }
+    },
+    {
+      id: 'M04', week: 1, domain: 'A-1', xp: 50, flag: 'core',
+      title: '【核心】設定を変えて挙動を変える',
+      brief: 'SA 伝票では仕入先明細（転記キー 31）が転記できません。IMG タブで OBA7 の「許可勘定タイプ」に K を追加し、SA 伝票で仕入先明細を含む伝票を転記してください。',
+      hint: 'まず設定を変えずに転記してエラー DT003 を見てください。次に IMG → 伝票タイプ → SA → 許可勘定タイプ に K を追加します。',
+      lesson: 'これが L3 の入口です。「エラーの原因＝どの設定か」を特定し、設定を変えると挙動が変わることを自分の手で確認する。実機のサンドボックスでは検証できない部分を、ここで埋めます。なお実務では SA に K を許可するのは統制上まず却下されます。「できる」と「やるべき」は別だと知ることも設計者の仕事です。',
+      check: function (c) {
+        if (!c.result.ok) return { pass: false, msg: 'まだ転記できていません。' };
+        if (c.header.docType !== 'SA') return { pass: false, msg: '伝票タイプ SA で転記してください。' };
+        if (c.cfg.docTypes.SA.accountTypes.indexOf('K') < 0) return { pass: false, msg: 'OBA7 で SA の許可勘定タイプに K を追加してください。' };
+        return { pass: c.result.bseg.some(function (b) { return b.KOART === 'K'; }),
+                 msg: '仕入先明細（転記キー 21/25/31）を含めてください。' };
+      }
+    },
+    {
+      id: 'M05', week: 1, domain: 'A-3', xp: 30,
+      title: '期間を締める',
+      brief: 'IMG タブで会計期間のオープン範囲を「8 〜 8」に絞り込み、その状態で 8 月付の伝票を転記してください。',
+      hint: 'OB52 に相当する設定です。範囲外の月を転記日付にするとどうなるかも試してみてください。',
+      lesson: '月次決算で「もう転記させない」を実現するのが期間管理です。締めた後の遡及依頼にどう答えるかは、実務で必ず問われます。',
+      check: function (c) {
+        if (!c.result.ok) return { pass: false, msg: 'まだ転記できていません。' };
+        var p = c.cfg.periodControl;
+        return { pass: p.openFrom === 8 && p.openTo === 8, msg: 'オープン期間を 8〜8 に設定してください。' };
+      }
+    },
+    {
+      id: 'M06', week: 3, domain: 'A-1', xp: 50, flag: 'core',
+      title: '【核心】設定矛盾を自分で起こす',
+      brief: 'IMG タブで転記キー 40 の「原価センタ」を抑止に変更し、勘定 610000（FSG G004＝原価センタ必須）へ転記して、エラー FS001 を発生させてください。',
+      hint: '転記キー側と勘定 FSG 側の項目ステータスは「リンク」されます。抑止と必須がぶつかると転記できません。',
+      lesson: 'これは実プロジェクトで頻発する設定不整合です。原因が OB41 側か OBC4 側か切り分けられれば、調査で強い武器になります。達成後は転記キー 40 の設定を戻しておいてください。',
+      check: function (c) {
+        return { pass: errHas(c.result, 'FS001'), msg: 'エラー FS001（設定矛盾）を発生させてください。' };
+      }
+    },
+    {
+      id: 'M07', week: 2, domain: 'A-2', xp: 40,
+      title: '調整勘定は誰が書くのか',
+      brief: '得意先請求（伝票タイプ DR、転記キー 01）を転記し、ACDOCA に売掛金 121000 が記帳されることを確認してください。',
+      hint: '121000 を明細に直接指定してはいけません。得意先を指定すると、取引先マスタの調整勘定へ自動的に記帳されます。',
+      lesson: '債権債務の残高は「取引先マスタの調整勘定」を通じて総勘定元帳に反映されます。この間接性を理解していないと、残高不一致の調査ができません。',
+      check: function (c) {
+        if (!c.result.ok) return { pass: false, msg: 'まだ転記できていません。' };
+        return { pass: c.header.docType === 'DR' && c.result.acdoca.some(function (a) { return a.RACCT === '121000'; }),
+                 msg: 'DR 伝票で得意先明細を転記してください。' };
+      }
+    },
+    {
+      id: 'M08', week: 2, domain: 'B-1', xp: 25,
+      title: '触れない勘定',
+      brief: '仮払消費税 175000 を明細に直接指定して転記し、エラー AC004（自動転記のみ）を発生させてください。',
+      hint: 'FS00 の「自動転記のみ」チェックが効いています。',
+      lesson: '「この勘定に手で入れられない」という問合せは保守でよく来ます。原因が勘定マスタ側の設定だと即答できるかどうかが差になります。',
+      check: function (c) {
+        return { pass: errHas(c.result, 'AC004'), msg: 'エラー AC004 を発生させてください。' };
+      }
+    },
+    {
+      id: 'M09', week: 2, domain: 'A-2', xp: 30,
+      title: '利益センタの要求',
+      brief: '売上高 400000 を貸方に計上する伝票を転記してください。',
+      hint: '400000 の FSG は G029 です。何が必須かを IMG タブで確認してください。',
+      lesson: '損益勘定に利益センタを必須にしておくと、S/4HANA では ACDOCA 上で FI と CO の情報が最初から揃います。この「入力時点で管理会計の軸を取る」設計が Universal Journal の考え方です。',
+      check: function (c) {
+        if (!c.result.ok) return { pass: false, msg: 'まだ転記できていません。' };
+        return { pass: c.result.bseg.some(function (b) { return b.HKONT === '400000' && b.SHKZG === 'H' && b.PRCTR; }),
+                 msg: '400000 を貸方に、利益センタつきで転記してください。' };
+      }
+    },
+    {
+      id: 'M10', week: 2, domain: 'A-2', xp: 35,
+      title: '仕入先へ支払う',
+      brief: '伝票タイプ KZ で、仕入先 V-1001 への支払（買掛金の消し込み側 借方 ／ 普通預金 貸方）を 11,000 で転記してください。',
+      hint: '支払側の転記キーは 25 です。買掛金 211000 は取引先の調整勘定として自動的に選ばれます。',
+      lesson: 'F110（支払プログラム）が自動生成するのは、まさにこの形の伝票です。手で作れる人は、F110 が何をしているかを説明できます。',
+      check: function (c) {
+        if (!c.result.ok) return { pass: false, msg: 'まだ転記できていません。' };
+        return { pass: c.header.docType === 'KZ' && has(c.result.bseg, '211000', 'S') && has(c.result.bseg, '113100', 'H'),
+                 msg: 'KZ 伝票で 211000 借方・113100 貸方の形にしてください。' };
+      }
+    }
+  ];
+})(typeof window !== 'undefined' ? window : globalThis);
+
+/* =========================================================
+   ドリル：一問一答（間隔反復で出題）
+   type 'mc' = 選択式（自動採点）／ 'open' = 記述（自己採点）
+   ========================================================= */
+(function (root) {
+  'use strict';
+  root.DRILLS = [
+    { id:'D001', week:1, domain:'A-1', type:'mc',
+      q:'会社コード（Company Code）の定義として最も適切なものは？',
+      choices:['管理会計上の最小単位','独立した財務諸表を作成する法的単位','購買組織を束ねる単位','原価センタをまとめる階層'],
+      a:1,
+      ex:'会社コードは外部報告（法定財務諸表）を作成する単位。CO の管理会計単位である原価管理領域（Controlling Area）とは目的が異なる。1 つの原価管理領域に複数の会社コードを割り当てるのが典型的なグローバル構成。' },
+
+    { id:'D002', week:1, domain:'A-1', type:'mc',
+      q:'転記キー（Posting Key）が決めないものはどれか？',
+      choices:['借方か貸方か','勘定タイプ（S/D/K/A/M）','項目ステータス（一部）','転記日付の会計期間'],
+      a:3,
+      ex:'転記日付から会計期間が決まるのは会計年度バリアント（OB29）と期間管理（OB52）の領域。転記キーは 借方/貸方・勘定タイプ・項目ステータスの一部を決める。' },
+
+    { id:'D003', week:1, domain:'A-1', type:'mc',
+      q:'ある項目が「転記キー側で抑止、勘定の項目ステータスグループ側で必須」と設定されている。転記するとどうなるか？',
+      choices:['必須が優先され入力を求められる','抑止が優先され非表示になる','設定矛盾としてエラーになり転記できない','警告は出るが転記できる'],
+      a:2,
+      ex:'抑止と必須は両立しない組み合わせでエラーになる。原因が OB41（転記キー）側か OBC4（FSG）側かを切り分けるのが調査の第一歩。実プロジェクトで頻出。' },
+
+    { id:'D004', week:1, domain:'A-1', type:'mc',
+      q:'伝票タイプ（OBA7）で設定しないものはどれか？',
+      choices:['番号範囲','許可される勘定タイプ','参照番号の必須指定','原価センタの必須指定'],
+      a:3,
+      ex:'原価センタの必須／任意／抑止は項目ステータス（転記キー × 勘定 FSG）の領域。伝票タイプは伝票全体の性格（番号・許可勘定タイプ・参照必須・逆仕訳タイプなど）を決める。' },
+
+    { id:'D005', week:2, domain:'A-1', type:'mc',
+      q:'S/4HANA の Universal Journal（ACDOCA）の説明として正しいものは？',
+      choices:['FI の総勘定元帳のみを高速化したテーブル','FI・CO・AA・ML などの明細を一元管理する単一テーブル','BSEG を置き換えたが CO は別テーブルのまま','集計値のみを保持し明細は BSEG にある'],
+      a:1,
+      ex:'ACDOCA は FI と CO を含む明細を一元管理する。これにより従来必要だった FI-CO 間の照合（実時間照合）が原則不要になった。BSEG は互換のため残る。' },
+
+    { id:'D006', week:2, domain:'A-1', type:'mc',
+      q:'G/L 勘定マスタで「自動転記のみ（Post automatically only）」を設定する典型的な勘定は？',
+      choices:['旅費交通費','仮払消費税','現金','売上高'],
+      a:1,
+      ex:'税勘定・GR/IR 勘定・為替差損益勘定など、システムが設定に基づいて自動生成する勘定に設定する。手入力を禁じることで残高の整合性を守る。' },
+
+    { id:'D007', week:2, domain:'A-2', type:'mc',
+      q:'売掛金勘定 121000 に直接転記しようとするとエラーになる理由は？',
+      choices:['自動転記のみ勘定だから','調整勘定（Reconciliation Account）だから','項目ステータスが抑止だから','番号範囲が枯渇しているから'],
+      a:1,
+      ex:'調整勘定は得意先／仕入先の補助元帳から自動的に更新される。直接転記を許すと補助元帳と総勘定元帳の残高が乖離するため禁止されている。' },
+
+    { id:'D008', week:2, domain:'A-4', type:'mc',
+      q:'税抜 10,000 円、消費税率 10% の仕入を「税込金額入力」で登録する場合、費用行に入力する金額は？',
+      choices:['10,000','11,000','9,091','1,000'],
+      a:1,
+      ex:'税込入力では総額 11,000 を入力し、システムが税抜 10,000 と税額 1,000 に分解する。外税入力なら 10,000 を入力し税額 1,000 が上乗せされる。この違いを取り違えると貸借不一致になる。' },
+
+    { id:'D009', week:2, domain:'A-2', type:'mc',
+      q:'仕入先請求の伝票タイプ KR で「参照番号必須」を設定する実務上の狙いは？',
+      choices:['番号範囲を節約する','請求書番号を強制入力させ二重計上を防ぐ','支払条件を自動決定する','税額計算を有効にする'],
+      a:1,
+      ex:'参照番号（XBLNR）に請求書番号を入れさせると、重複チェック（同一仕入先・同一参照番号・同一金額）が機能する。統制の要。' },
+
+    { id:'D010', week:3, domain:'B-1', type:'mc',
+      q:'転記済み伝票のヘッダ情報が格納されるテーブルは？',
+      choices:['BSEG','BKPF','ACDOCA','SKB1'],
+      a:1,
+      ex:'BKPF＝ヘッダ（会社コード・伝票番号・年度・伝票タイプ・日付）、BSEG＝明細、ACDOCA＝Universal Journal、SKB1＝会社コード別 G/L 勘定マスタ。' },
+
+    { id:'D011', week:3, domain:'B-1', type:'mc',
+      q:'BSEG の SHKZG 項目が意味するものは？',
+      choices:['税コード','借方／貸方指標','支払方法','勘定タイプ'],
+      a:1,
+      ex:'SHKZG は S＝借方（Soll）、H＝貸方（Haben）。ドイツ語由来。ACDOCA では DRCRK に相当し、金額 HSL は符号付きで保持される。' },
+
+    { id:'D012', week:1, domain:'A-1', type:'mc',
+      q:'会計期間を締めるための設定はどれか？',
+      choices:['OB29 会計年度バリアント','OB52 転記期間バリアント','OBA7 伝票タイプ','FBN1 番号範囲'],
+      a:1,
+      ex:'OB52 で勘定タイプごと・期間ごとにオープン／クローズを制御する。月次決算の締め作業の中心。OB29 は年度の期間構造（12+4 など）を定義する別の設定。' },
+
+    { id:'D013', week:2, domain:'A-2', type:'open',
+      q:'仕入先請求を計上してから支払うまでに、FI では何本の伝票が発生し、それぞれどの勘定が動くか説明してください。',
+      ex:'典型例：①請求計上（KR）＝仕入高／仮払消費税 借方、買掛金 貸方 ②支払（KZ）＝買掛金 借方、普通預金 貸方。買掛金は未決済項目として計上され、支払時に消し込まれる。消込の可否は勘定の「未決済項目管理」設定に依存する。' },
+
+    { id:'D014', week:2, domain:'A-2', type:'mc',
+      q:'MM の入庫（GR）時に発生する GR/IR 勘定の役割は？',
+      choices:['在庫の評価差額を吸収する','入庫と請求書照合のタイミング差を一時的に受ける','仕入先の与信を管理する','消費税を仮計上する'],
+      a:1,
+      ex:'GR/IR（入庫／請求照合仮勘定）は「モノは来たが請求書はまだ」の状態を受ける中間勘定。決算時に残高分析が必要になる代表的な勘定。' },
+
+    { id:'D015', week:3, domain:'B-2', type:'open',
+      q:'顧客から「伝票入力時に必ず部門コードを入れさせたい」と言われた。標準機能でどう実現するか、選択肢と判断基準を挙げてください。',
+      ex:'選択肢：①原価センタ／利益センタを項目ステータスで必須にする（FSG）②事業領域を使う ③割当項目やテキストに運用ルールで入れさせる ④明細レイアウトのカスタム項目。判断基準：その「部門」が管理会計の集計軸なのか、単なる識別ラベルなのか。集計・レポートが必要なら原価センタ／利益センタ、識別だけなら既存項目の流用。安易にアドオンしない。' },
+
+    { id:'D016', week:1, domain:'A-1', type:'mc',
+      q:'転記キー 31 が表す組み合わせは？',
+      choices:['総勘定元帳 借方','仕入先 請求（貸方）','得意先 入金（貸方）','資産 借方'],
+      a:1,
+      ex:'40/50＝G/L 借方/貸方、01/11/15＝得意先、21/25/31＝仕入先、70/75＝資産。番号を丸暗記するより「勘定タイプ × 借貸 × 業務」の組み合わせとして覚える。' },
+
+    { id:'D017', week:2, domain:'A-3', type:'mc',
+      q:'S/4HANA で FI と CO の実時間照合（リアルタイム統合）が原則不要になった理由は？',
+      choices:['CO が廃止されたため','ACDOCA に FI と CO の明細が一元化されたため','照合が夜間バッチに移されたため','CO が別システムに分離されたため'],
+      a:1,
+      ex:'ECC では FI と CO が別テーブルで、期をまたぐ内部振替などで差異が生じ照合が必要だった。S/4HANA では同一行に FI 項目と CO 項目が並ぶため構造的に一致する。' },
+
+    { id:'D018', week:2, domain:'A-4', type:'mc',
+      q:'固定資産の取得を FI 側から転記する際の転記キーは？',
+      choices:['40','70','21','01'],
+      a:1,
+      ex:'70＝資産 借方、75＝資産 貸方。資産明細では資産番号とトランザクションタイプ（取得・除却など）が必要になる。' },
+
+    { id:'D019', week:3, domain:'B-1', type:'open',
+      q:'「特定の伝票だけ原価センタが入力できない」という問合せを受けた。調査の手順を順に述べてください。',
+      ex:'①現象の特定：伝票タイプ・転記キー・勘定を確認 ②項目ステータスの合成を確認：転記キー（OB41）の項目ステータス と 勘定 FSG（FS00→OBC4）をリンクで照合 ③どちらが抑止しているかを特定 ④他の伝票との差分（勘定が違う／転記キーが違う）を比較 ⑤設計意図を確認してから変更提案。いきなり設定を変えないこと。' },
+
+    { id:'D020', week:1, domain:'A-1', type:'mc',
+      q:'伝票番号が飛ぶ（欠番が出る）主な原因として適切なものは？',
+      choices:['番号範囲がバッファリングされている','貸借が一致していない','会計期間が閉じている','伝票タイプが未定義'],
+      a:0,
+      ex:'番号範囲のバッファリング（事前取得）や、入力途中の中断で欠番が生じる。会計監査で「連番性」を求められる場合はバッファなしにする設計判断が必要。' }
+  ];
+})(typeof window !== 'undefined' ? window : globalThis);
+
+/* =========================================================
+   UI レイヤ
+   ========================================================= */
+(function () {
+  'use strict';
+
+  var S = STORE, view = 'home', cfg = null, flashTimer = null;
+
+  function deep(o) { return JSON.parse(JSON.stringify(o)); }
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c];
+    });
+  }
+  function opts(obj, sel, fmt) {
+    return Object.keys(obj).map(function (k) {
+      var label = fmt ? fmt(k, obj[k]) : (k + ' ' + (obj[k].text || obj[k]));
+      return '<option value="' + esc(k) + '"' + (k === sel ? ' selected' : '') + '>' + esc(label) + '</option>';
+    }).join('');
+  }
+  function flash(msg) {
+    var d = document.getElementById('flash');
+    d.textContent = msg; d.style.display = 'block';
+    clearTimeout(flashTimer);
+    flashTimer = setTimeout(function () { d.style.display = 'none'; }, 2600);
+  }
+
+  /* ---------- 設定のロード ---------- */
+  function loadCfg() {
+    var saved = S.state().cfg;
+    cfg = saved ? saved : deep(SEED);
+    /* シード側に増えた定義を取り込む（前方互換） */
+    Object.keys(SEED).forEach(function (k) { if (!(k in cfg)) cfg[k] = deep(SEED[k]); });
+    cfg.companyCode = cfg.companyCode || '1000';
+  }
+  function persistCfg() { S.saveCfg(cfg); }
+  function resetCfg() { cfg = deep(SEED); cfg.companyCode = '1000'; persistCfg(); }
+
+  /* ---------- ラボの状態 ---------- */
+  var lab = {
+    header: { docType: 'SA', postingDate: S.today(), docDate: S.today(), currency: 'JPY', reference: '', headerText: '' },
+    lines: [
+      { pk: '40', account: '610000', partner: '', amount: '11000', taxCode: '', taxIncl: false, fields: {} },
+      { pk: '50', account: '113100', partner: '', amount: '11000', taxCode: '', taxIncl: false, fields: {} }
+    ],
+    result: null, missionId: null, missionMsg: null
+  };
+
+  /* =========================================================
+     ホーム
+     ========================================================= */
+  function renderHome() {
+    var st = S.state(), lp = S.levelProgress();
+    var due = S.dueDrills(DRILLS).length;
+    var doneM = MISSIONS.filter(function (m) { return st.missions[m.id] && st.missions[m.id].done; }).length;
+
+    var stats = '<div class="card"><div class="grid g3">' +
+      '<div class="stat"><b>Lv.' + S.level() + '</b><span>レベル</span></div>' +
+      '<div class="stat"><b>' + st.xp + '</b><span>累計 XP</span></div>' +
+      '<div class="stat"><b>' + st.streak.count + '</b><span>連続学習日数（最長 ' + st.streak.best + '）</span></div>' +
+      '<div class="stat"><b>' + doneM + '/' + MISSIONS.length + '</b><span>ミッション達成</span></div>' +
+      '</div>' +
+      '<div class="bar" style="margin-top:.5rem"><i style="width:' + lp.pct + '%"></i></div>' +
+      '<div class="small muted" style="text-align:right">次のレベルまで ' + Math.max(0, lp.next - st.xp) + ' XP</div>' +
+      '</div>';
+
+    var todo = '<div class="card"><h2>今日やること</h2><ul class="small">' +
+      '<li>復習期限のドリル：<b>' + due + ' 問</b>' + (due ? '（<a href="#" data-nav="drill">解く</a>）' : '（なし。よく回っています）') + '</li>' +
+      '<li>未達成ミッション：<b>' + (MISSIONS.length - doneM) + ' 件</b>（<a href="#" data-nav="missions">見る</a>）</li>' +
+      '<li>転記ラボで設定をいじって挙動の差を観察する（<a href="#" data-nav="lab">開く</a>）</li>' +
+      '</ul></div>';
+
+    var tree = '<div class="card"><h2>カリキュラム（12週）</h2>' +
+      '<p class="small muted">各週の到達目標。習熟度は下の自己評価と連動させて更新します。</p><div class="tree">' +
+      SEED.weeks.map(function (w) {
+        var lv = st.mastery[w.d] || 0;
+        return '<div class="node' + (lv >= 3 ? ' done' : '') + '">' +
+          '<div class="w">W' + w.w + ' / ' + w.d + '</div>' +
+          '<div class="t">' + esc(w.t) + '</div>' +
+          '<div class="small muted" style="margin-top:.3rem">' + esc(w.g) + '</div></div>';
+      }).join('') + '</div></div>';
+
+    var mastery = '<div class="card"><h2>習熟度マップ（自己評価）</h2>' +
+      '<p class="small muted">0=知らない / 1=手順書があればできる / 2=一人でできる / 3=設定と挙動の因果を説明できる / 4=設計判断ができる</p>' +
+      Object.keys(S.DOMAINS).map(function (k) {
+        var v = st.mastery[k] || 0;
+        return '<div class="field" style="display:flex;gap:.75rem;align-items:center">' +
+          '<div style="flex:1"><b class="small">' + k + '</b> <span class="small">' + esc(S.DOMAINS[k]) + '</span>' +
+          '<div class="bar"><i style="width:' + (v * 25) + '%"></i></div></div>' +
+          '<select data-mastery="' + k + '" style="width:auto">' +
+          [0, 1, 2, 3, 4].map(function (n) { return '<option value="' + n + '"' + (n === v ? ' selected' : '') + '>' + n + '</option>'; }).join('') +
+          '</select></div>';
+      }).join('') + '</div>';
+
+    var exportCard = '<div class="card"><h2>進捗の記録</h2>' +
+      '<p class="small muted">下のテキストをコピーして <span class="mono">progress/</span> にコミットすると、学習ログがリポジトリに残ります。</p>' +
+      '<textarea rows="10" readonly class="mono" style="font-size:.75rem">' + esc(exportText()) + '</textarea>' +
+      '<div style="margin-top:.5rem"><button class="btn ghost sm" data-act="reset-all">進捗をリセット</button></div></div>';
+
+    return stats + todo + tree + mastery + exportCard;
+  }
+
+  function exportText() {
+    var st = S.state();
+    var l = ['# 学習ログ ' + S.today(), '',
+      '- レベル: ' + S.level() + '（XP ' + st.xp + '）',
+      '- 連続学習日数: ' + st.streak.count + '（最長 ' + st.streak.best + '）', '',
+      '## 習熟度'];
+    Object.keys(S.DOMAINS).forEach(function (k) { l.push('- ' + k + ' ' + S.DOMAINS[k] + ': Lv' + (st.mastery[k] || 0)); });
+    l.push('', '## ミッション');
+    MISSIONS.forEach(function (m) {
+      l.push('- [' + (st.missions[m.id] && st.missions[m.id].done ? 'x' : ' ') + '] ' + m.id + ' ' + m.title);
+    });
+    l.push('', '## ドリル成績');
+    DRILLS.forEach(function (q) {
+      var c = st.drills[q.id];
+      if (c && c.reps) l.push('- ' + q.id + ': ' + c.ok + '/' + c.reps + ' 正答、次回 ' + c.due);
+    });
+    return l.join('\n');
+  }
+
+  /* =========================================================
+     転記ラボ
+     ========================================================= */
+  function lineAcctType(ln) {
+    var pk = cfg.postingKeys[ln.pk];
+    return pk ? pk.acctType : 'S';
+  }
+  function lineGL(ln) {
+    var t = lineAcctType(ln);
+    if (t === 'D' || t === 'K') {
+      var bp = cfg.partners[ln.partner];
+      return bp ? cfg.glAccounts[bp.recon] : null;
+    }
+    return cfg.glAccounts[ln.account] || null;
+  }
+
+  function renderLine(ln, i) {
+    var pk = cfg.postingKeys[ln.pk];
+    var at = lineAcctType(ln);
+    var gl = lineGL(ln);
+    var isBP = (at === 'D' || at === 'K');
+
+    var acctSel;
+    if (isBP) {
+      var ps = {};
+      Object.keys(cfg.partners).forEach(function (k) { if (cfg.partners[k].type === at) ps[k] = cfg.partners[k]; });
+      acctSel = '<label class="f">取引先</label><select data-line="' + i + '" data-k="partner">' +
+        '<option value="">-- 選択 --</option>' + opts(ps, ln.partner) + '</select>' +
+        (gl ? '<div class="small muted">→ 調整勘定 ' + esc(cfg.partners[ln.partner].recon) + ' ' + esc(gl.text) + '</div>' : '');
+    } else {
+      acctSel = '<label class="f">G/L 勘定</label><select data-line="' + i + '" data-k="account">' +
+        '<option value="">-- 選択 --</option>' + opts(cfg.glAccounts, ln.account) + '</select>' +
+        (gl ? '<div class="small muted">FSG ' + esc(gl.fsg) + '　' + (gl.autoOnly ? '<span class="tag req">自動転記のみ</span>' : '') +
+          (gl.recon ? '<span class="tag req">調整勘定</span>' : '') +
+          (gl.taxCat ? '<span class="tag">税カテゴリ ' + esc(gl.taxCat) + '</span>' : '') + '</div>' : '');
+    }
+
+    /* 項目ステータスの合成結果 */
+    var fsHtml = '', supList = [];
+    if (pk && gl) {
+      var fs = ENGINE.resolveFieldStatus(cfg, ln.pk, gl.fsg);
+      fsHtml = Object.keys(fs).map(function (f) {
+        var st = fs[f], label = cfg.fieldLabels[f];
+        var origin = ln.pk + ':' + ENGINE.FS_LABEL[st.pk] + ' × ' + gl.fsg + ':' + ENGINE.FS_LABEL[st.fsg] + ' → ';
+        if (st.conflict) {
+          return '<div class="field"><label class="f">' + esc(label) +
+            ' <span class="tag req">設定矛盾</span></label><div class="small" style="color:var(--err)">' +
+            esc(origin) + 'エラー</div></div>';
+        }
+        if (st.value === 'sup') { supList.push(label + '（' + origin + '抑止）'); return ''; }
+        var val = (ln.fields || {})[f] || '';
+        var ctl;
+        var maps = { costCenter: cfg.costCenters, profitCenter: cfg.profitCenters,
+                     paymentTerms: cfg.paymentTerms, paymentMethod: cfg.paymentMethods };
+        if (maps[f]) {
+          ctl = '<select data-line="' + i + '" data-field="' + f + '"><option value="">--</option>' +
+            Object.keys(maps[f]).map(function (k) {
+              return '<option value="' + esc(k) + '"' + (k === val ? ' selected' : '') + '>' + esc(k + ' ' + maps[f][k]) + '</option>';
+            }).join('') + '</select>';
+        } else {
+          ctl = '<input data-line="' + i + '" data-field="' + f + '" value="' + esc(val) + '">';
+        }
+        return '<div class="field"><label class="f">' + esc(label) +
+          (st.value === 'req' ? ' <span class="tag req">必須</span>' : ' <span class="tag">任意</span>') +
+          '</label>' + ctl + '<div class="small muted" style="font-size:.68rem">' + esc(origin + ENGINE.FS_LABEL[st.value]) + '</div></div>';
+      }).join('');
+    }
+
+    var taxable = gl && (gl.taxCat || isBP);
+    return '<div class="line">' +
+      '<div class="line-head"><span class="no">明細 ' + (i + 1) + '</span>' +
+      (pk ? '<span class="tag ' + (pk.dc === 'D' ? 'ok' : '') + '">' + (pk.dc === 'D' ? '借方' : '貸方') + '</span><span class="tag">勘定タイプ ' + pk.acctType + '</span>' : '') +
+      '<span style="flex:1"></span>' +
+      (lab.lines.length > 2 ? '<button class="btn ghost sm" data-act="del-line" data-line="' + i + '">削除</button>' : '') +
+      '</div>' +
+      '<div class="grid g3">' +
+      '<div><label class="f">転記キー</label><select data-line="' + i + '" data-k="pk">' + opts(cfg.postingKeys, ln.pk) + '</select></div>' +
+      '<div>' + acctSel + '</div>' +
+      '<div><label class="f">金額</label><input data-line="' + i + '" data-k="amount" value="' + esc(ln.amount) + '" inputmode="decimal"></div>' +
+      '<div><label class="f">税コード</label><select data-line="' + i + '" data-k="taxCode"><option value="">--</option>' +
+        opts(cfg.taxCodes, ln.taxCode) + '</select>' +
+        (!taxable && ln.taxCode ? '<div class="small" style="color:var(--warn)">この勘定は税カテゴリ未設定</div>' : '') +
+        '<label class="small" style="display:flex;gap:.3rem;align-items:center;margin-top:.25rem">' +
+        '<input type="checkbox" data-line="' + i + '" data-k="taxIncl" style="width:auto"' + (ln.taxIncl ? ' checked' : '') + '> 税込金額として入力</label></div>' +
+      '</div>' +
+      (fsHtml ? '<div style="margin-top:.6rem"><div class="small muted">入力項目（転記キー × 勘定 FSG の合成結果）</div><div class="fs-grid">' + fsHtml + '</div></div>' : '') +
+      (supList.length ? '<div class="small muted" style="margin-top:.4rem">抑止された項目：' + esc(supList.join(' / ')) + '</div>' : '') +
+      '</div>';
+  }
+
+  function renderResult() {
+    var r = lab.result;
+    if (!r) return '';
+    var out = '';
+
+    if (lab.missionMsg) {
+      out += '<div class="msg ' + (lab.missionMsg.pass ? 'ok' : 'warn') + '"><b>ミッション判定：</b>' + esc(lab.missionMsg.text) + '</div>';
+    }
+
+    if (!r.ok) {
+      out += r.errors.map(function (e) {
+        return '<div class="msg err"><b class="mono">' + esc(e.code) + '</b> ' + esc(e.msg) +
+          (e.hint ? '<span class="hint">💡 ' + esc(e.hint) + '</span>' : '') + '</div>';
+      }).join('');
+    } else {
+      out += '<div class="msg ok"><b>転記されました。</b> 伝票番号 <span class="mono">' + esc(r.belnr) + '</span></div>';
+    }
+    (r.warnings || []).forEach(function (w) { out += '<div class="msg warn">' + esc(w) + '</div>'; });
+
+    if (r.ok) {
+      out += '<h3 style="margin-top:1rem">BKPF（ヘッダ）</h3><div class="tblwrap"><table><tr>' +
+        Object.keys(r.bkpf).map(function (k) { return '<th>' + k + '</th>'; }).join('') + '</tr><tr>' +
+        Object.keys(r.bkpf).map(function (k) { return '<td class="mono">' + esc(r.bkpf[k]) + '</td>'; }).join('') + '</tr></table></div>';
+
+      var cols = ['BUZEI', 'BSCHL', 'KOART', 'HKONT', 'LIFNR', 'KUNNR', 'SHKZG', 'WRBTR', 'MWSKZ', 'KOSTL', 'PRCTR', 'SGTXT', 'AUTO'];
+      out += '<h3 style="margin-top:1rem">BSEG（明細）</h3><div class="tblwrap"><table><tr>' +
+        cols.map(function (c) { return '<th>' + c + '</th>'; }).join('') + '</tr>' +
+        r.bseg.map(function (b) {
+          return '<tr' + (b.AUTO ? ' class="auto"' : '') + '>' + cols.map(function (c) {
+            return '<td class="mono' + (c === 'WRBTR' ? ' num' : '') + '">' + esc(b[c]) + '</td>';
+          }).join('') + '</tr>';
+        }).join('') + '</table></div>';
+
+      var ac = ['RLDNR', 'RBUKRS', 'GJAHR', 'BELNR', 'DOCLN', 'RACCT', 'DRCRK', 'HSL', 'RCNTR', 'PRCTR'];
+      out += '<h3 style="margin-top:1rem">ACDOCA（Universal Journal）</h3><div class="tblwrap"><table><tr>' +
+        ac.map(function (c) { return '<th>' + c + '</th>'; }).join('') + '</tr>' +
+        r.acdoca.map(function (a) {
+          return '<tr>' + ac.map(function (c) { return '<td class="mono' + (c === 'HSL' ? ' num' : '') + '">' + esc(a[c]) + '</td>'; }).join('') + '</tr>';
+        }).join('') + '</table></div>';
+    }
+
+    if (r.trace && r.trace.length) {
+      out += '<h3 style="margin-top:1rem">なぜこの挙動になったか（設定トレース）</h3>' +
+        '<ol class="trace">' + r.trace.map(function (t) {
+          return '<li><span class="t-set">' + esc(t.setting) + '</span><span class="t-tcode">' + esc(t.tcode) + '</span><br>' +
+            '<span class="muted">' + esc(t.effect) + '</span></li>';
+        }).join('') + '</ol>';
+    }
+    return '<div class="card">' + out + '</div>';
+  }
+
+  function renderLab() {
+    var h = lab.header;
+    var m = lab.missionId ? MISSIONS.filter(function (x) { return x.id === lab.missionId; })[0] : null;
+
+    var missionBar = m ? '<div class="card" style="border-color:var(--accent)">' +
+      '<div class="small muted">挑戦中のミッション</div><h3>' + esc(m.id + ' ' + m.title) + '</h3>' +
+      '<p class="small">' + esc(m.brief) + '</p>' +
+      '<details><summary>ヒント</summary><p class="small muted">' + esc(m.hint) + '</p></details>' +
+      '<button class="btn ghost sm" data-act="mission-clear" style="margin-top:.4rem">解除</button></div>' : '';
+
+    return missionBar +
+      '<div class="card"><h2>伝票ヘッダ</h2><div class="grid g3">' +
+      '<div><label class="f">伝票タイプ</label><select data-h="docType">' + opts(cfg.docTypes, h.docType) + '</select>' +
+        '<div class="small muted">' + esc(cfg.docTypes[h.docType] ? cfg.docTypes[h.docType].hint : '') + '</div></div>' +
+      '<div><label class="f">転記日付</label><input type="date" data-h="postingDate" value="' + esc(h.postingDate) + '"></div>' +
+      '<div><label class="f">伝票日付</label><input type="date" data-h="docDate" value="' + esc(h.docDate) + '"></div>' +
+      '<div><label class="f">参照番号' + (cfg.docTypes[h.docType] && cfg.docTypes[h.docType].refRequired ? ' <span class="tag req">必須</span>' : '') +
+        '</label><input data-h="reference" value="' + esc(h.reference) + '"></div>' +
+      '<div><label class="f">ヘッダテキスト</label><input data-h="headerText" value="' + esc(h.headerText) + '"></div>' +
+      '<div><label class="f">通貨</label><input data-h="currency" value="' + esc(h.currency) + '"></div>' +
+      '</div></div>' +
+      '<div class="card"><h2>明細</h2>' + lab.lines.map(renderLine).join('') +
+      '<div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.5rem">' +
+      '<button class="btn ghost sm" data-act="add-line">明細を追加</button>' +
+      '<button class="btn" data-act="post">転記する</button>' +
+      '<button class="btn ghost sm" data-act="load-preset" data-preset="ap">例：仕入先請求</button>' +
+      '<button class="btn ghost sm" data-act="load-preset" data-preset="ar">例：得意先請求</button>' +
+      '</div></div>' + renderResult();
+  }
+
+  /* =========================================================
+     IMG（設定）
+     ========================================================= */
+  function renderIMG() {
+    var out = '<div class="card"><h2>IMG（設定）</h2>' +
+      '<p class="small muted">ここを変えると、転記ラボの挙動とフォームがその場で変わります。実機のサンドボックスでは検証できない「設定 → 挙動」の因果を、ここで確認してください。</p>' +
+      '<button class="btn ghost sm" data-act="reset-cfg">設定を初期値に戻す</button></div>';
+
+    /* 期間 */
+    var pc = cfg.periodControl;
+    out += '<div class="card"><h3>会計期間管理 <span class="t-tcode mono">OB52</span></h3><div class="grid g3">' +
+      '<div><label class="f">会計年度</label><input data-cfg="periodControl.fiscalYear" value="' + pc.fiscalYear + '"></div>' +
+      '<div><label class="f">オープン開始期間</label><input data-cfg="periodControl.openFrom" value="' + pc.openFrom + '"></div>' +
+      '<div><label class="f">オープン終了期間</label><input data-cfg="periodControl.openTo" value="' + pc.openTo + '"></div>' +
+      '</div></div>';
+
+    /* 伝票タイプ */
+    out += '<div class="card"><h3>伝票タイプ <span class="t-tcode mono">OBA7</span></h3><div class="tblwrap"><table>' +
+      '<tr><th>タイプ</th><th>名称</th><th>番号範囲</th><th>許可勘定タイプ</th><th>参照番号必須</th></tr>' +
+      Object.keys(cfg.docTypes).map(function (k) {
+        var d = cfg.docTypes[k];
+        return '<tr><td class="mono">' + k + '</td><td>' + esc(d.text) + '</td><td class="mono">' + esc(d.range) + '</td>' +
+          '<td>' + ['S', 'D', 'K', 'A'].map(function (t) {
+            return '<label class="small" style="margin-right:.5rem"><input type="checkbox" style="width:auto" data-dt="' + k + '" data-at="' + t + '"' +
+              (d.accountTypes.indexOf(t) >= 0 ? ' checked' : '') + '> ' + t + '</label>';
+          }).join('') + '</td>' +
+          '<td><input type="checkbox" style="width:auto" data-dt="' + k + '" data-ref="1"' + (d.refRequired ? ' checked' : '') + '></td></tr>';
+      }).join('') + '</table></div>' +
+      '<p class="small muted">勘定タイプ：S=総勘定元帳／D=得意先／K=仕入先／A=資産</p></div>';
+
+    /* 項目ステータス */
+    var fields = Object.keys(cfg.fieldLabels);
+    function fsTable(title, tcode, src, attr) {
+      return '<div class="card"><h3>' + title + ' <span class="t-tcode mono">' + tcode + '</span></h3><div class="tblwrap"><table>' +
+        '<tr><th>キー</th>' + fields.map(function (f) { return '<th>' + esc(cfg.fieldLabels[f]) + '</th>'; }).join('') + '</tr>' +
+        Object.keys(src).map(function (k) {
+          return '<tr><td class="mono">' + k + '<br><span class="small muted">' + esc(src[k].text) + '</span></td>' +
+            fields.map(function (f) {
+              var v = src[k].fs[f] || 'opt';
+              return '<td><select data-' + attr + '="' + k + '" data-f="' + f + '" style="min-width:74px">' +
+                ['req', 'opt', 'sup'].map(function (o) {
+                  return '<option value="' + o + '"' + (o === v ? ' selected' : '') + '>' + ENGINE.FS_LABEL[o] + '</option>';
+                }).join('') + '</select></td>';
+            }).join('') + '</tr>';
+        }).join('') + '</table></div></div>';
+    }
+    out += fsTable('転記キーの項目ステータス', 'OB41', cfg.postingKeys, 'pkfs');
+    out += fsTable('項目ステータスグループ', 'OBC4', cfg.fieldStatusGroups, 'fsg');
+
+    /* G/L 勘定 */
+    out += '<div class="card"><h3>G/L 勘定マスタ <span class="t-tcode mono">FS00</span></h3><div class="tblwrap"><table>' +
+      '<tr><th>勘定</th><th>名称</th><th>FSG</th><th>税カテゴリ</th><th>自動転記のみ</th><th>調整勘定</th></tr>' +
+      Object.keys(cfg.glAccounts).map(function (k) {
+        var g = cfg.glAccounts[k];
+        return '<tr><td class="mono">' + k + '</td><td>' + esc(g.text) + '</td>' +
+          '<td><select data-gl="' + k + '" data-p="fsg" style="min-width:80px">' +
+            Object.keys(cfg.fieldStatusGroups).map(function (f) {
+              return '<option value="' + f + '"' + (f === g.fsg ? ' selected' : '') + '>' + f + '</option>';
+            }).join('') + '</select></td>' +
+          '<td><select data-gl="' + k + '" data-p="taxCat" style="min-width:60px">' +
+            ['', '+', '-'].map(function (t) { return '<option value="' + t + '"' + (t === g.taxCat ? ' selected' : '') + '>' + (t || '--') + '</option>'; }).join('') +
+            '</select></td>' +
+          '<td><input type="checkbox" style="width:auto" data-gl="' + k + '" data-p="autoOnly"' + (g.autoOnly ? ' checked' : '') + '></td>' +
+          '<td class="mono">' + esc(g.recon || '') + '</td></tr>';
+      }).join('') + '</table></div></div>';
+
+    /* 税コード */
+    out += '<div class="card"><h3>税コード <span class="t-tcode mono">FTXP / OB40</span></h3><div class="tblwrap"><table>' +
+      '<tr><th>コード</th><th>名称</th><th>税率(%)</th><th>方向</th><th>自動転記勘定</th></tr>' +
+      Object.keys(cfg.taxCodes).map(function (k) {
+        var t = cfg.taxCodes[k];
+        return '<tr><td class="mono">' + k + '</td><td>' + esc(t.text) + '</td>' +
+          '<td><input data-tax="' + k + '" data-p="rate" value="' + t.rate + '" style="width:70px"></td>' +
+          '<td>' + (t.dir === 'input' ? '仕入' : '売上') + '</td><td class="mono">' + esc(t.account || '') + '</td></tr>';
+      }).join('') + '</table></div></div>';
+
+    return out;
+  }
+
+  /* =========================================================
+     ドリル
+     ========================================================= */
+  var quiz = { queue: [], idx: 0, answered: null, mode: 'due' };
+
+  function startQuiz(mode) {
+    quiz.mode = mode;
+    quiz.queue = (mode === 'all' ? DRILLS.slice() : S.dueDrills(DRILLS)).sort(function () { return Math.random() - 0.5; });
+    quiz.idx = 0; quiz.answered = null;
+  }
+
+  function renderDrill() {
+    if (!quiz.queue.length && quiz.idx === 0) {
+      var due = S.dueDrills(DRILLS).length;
+      return '<div class="card"><h2>ドリル</h2>' +
+        '<p class="small muted">間隔反復で出題します。正解すると次の出題が先送りされ、間違えると翌日また出ます。</p>' +
+        '<p>復習期限：<b>' + due + ' 問</b>／全 ' + DRILLS.length + ' 問</p>' +
+        '<button class="btn" data-act="quiz-start" data-mode="due"' + (due ? '' : ' disabled') + '>期限の問題を解く</button> ' +
+        '<button class="btn ghost" data-act="quiz-start" data-mode="all">全問から解く</button></div>';
+    }
+    if (quiz.idx >= quiz.queue.length) {
+      return '<div class="card"><h2>お疲れさまでした</h2><p>' + quiz.queue.length + ' 問を解きました。</p>' +
+        '<button class="btn" data-act="quiz-reset">戻る</button></div>';
+    }
+    var q = quiz.queue[quiz.idx];
+    var out = '<div class="card"><div class="small muted">' + (quiz.idx + 1) + ' / ' + quiz.queue.length +
+      '　W' + q.week + '　' + esc(S.DOMAINS[q.domain] || q.domain) + '　<span class="mono">' + q.id + '</span></div>' +
+      '<h2 style="margin-top:.4rem">' + esc(q.q) + '</h2>';
+
+    if (q.type === 'mc') {
+      out += q.choices.map(function (c, i) {
+        var cls = '';
+        if (quiz.answered != null) {
+          if (i === q.a) cls = ' right';
+          else if (i === quiz.answered) cls = ' wrong';
+        }
+        return '<button class="quiz-choice' + cls + '" data-act="quiz-answer" data-i="' + i + '"' +
+          (quiz.answered != null ? ' disabled' : '') + '>' + esc(c) + '</button>';
+      }).join('');
+    } else {
+      out += '<p class="small muted">自分の言葉で答えてから「解説を見る」を押し、自己採点してください。</p>' +
+        '<textarea rows="5" id="openAns" placeholder="ここに書いてから解説を開く"></textarea>' +
+        (quiz.answered == null ? '<div style="margin-top:.5rem"><button class="btn" data-act="quiz-reveal">解説を見る</button></div>' : '');
+    }
+
+    if (quiz.answered != null) {
+      out += '<div class="msg ' + (quiz.answered === q.a || q.type === 'open' ? 'ok' : 'err') + '" style="margin-top:.8rem">' +
+        '<b>解説</b><br>' + esc(q.ex) + '</div>';
+      if (q.type === 'open') {
+        out += '<div style="display:flex;gap:.5rem"><button class="btn" data-act="quiz-self" data-ok="1">言えた</button>' +
+          '<button class="btn ghost" data-act="quiz-self" data-ok="0">言えなかった</button></div>';
+      } else {
+        out += '<button class="btn" data-act="quiz-next">次へ</button>';
+      }
+    }
+    return out + '</div>';
+  }
+
+  /* =========================================================
+     ミッション一覧
+     ========================================================= */
+  function renderMissions() {
+    var st = S.state();
+    return '<div class="card"><h2>ミッション</h2>' +
+      '<p class="small muted">課題を選ぶと転記ラボに設定され、転記のたびに達成判定されます。</p></div>' +
+      MISSIONS.map(function (m) {
+        var done = st.missions[m.id] && st.missions[m.id].done;
+        return '<div class="mission' + (done ? ' done' : '') + '">' +
+          '<div class="small muted">W' + m.week + '　' + esc(S.DOMAINS[m.domain] || '') + '　' + m.xp + ' XP' +
+          (m.flag === 'core' ? ' <span class="tag core">核心課題</span>' : '') +
+          (done ? ' <span class="tag ok">達成済</span>' : '') + '</div>' +
+          '<h3>' + esc(m.id + ' ' + m.title) + '</h3>' +
+          '<p class="small">' + esc(m.brief) + '</p>' +
+          (done ? '<details><summary>この課題で学んだこと</summary><p class="small muted">' + esc(m.lesson) + '</p></details>' : '') +
+          '<button class="btn sm" data-act="mission-take" data-id="' + m.id + '">転記ラボで挑戦</button>' +
+          '</div>';
+      }).join('');
+  }
+
+  /* =========================================================
+     レンダリング & イベント
+     ========================================================= */
+  function render() {
+    var st = S.state();
+    document.getElementById('hud').innerHTML =
+      '<span class="chip">Lv <b>' + S.level() + '</b></span>' +
+      '<span class="chip">XP <b>' + st.xp + '</b></span>' +
+      '<span class="chip">🔥 <b>' + st.streak.count + '</b></span>';
+    Array.prototype.forEach.call(document.querySelectorAll('nav button'), function (b) {
+      b.classList.toggle('active', b.dataset.nav === view);
+    });
+    var v = document.getElementById('view');
+    v.innerHTML = view === 'home' ? renderHome()
+      : view === 'lab' ? renderLab()
+      : view === 'img' ? renderIMG()
+      : view === 'drill' ? renderDrill()
+      : renderMissions();
+    window.scrollTo({ top: 0 });
+  }
+
+  function num(v, d) { var n = parseInt(v, 10); return isNaN(n) ? d : n; }
+
+  function doPost() {
+    var lines = lab.lines.map(function (l) {
+      return { pk: l.pk, account: l.account, partner: l.partner, amount: Number(l.amount) || 0,
+               taxCode: l.taxCode, taxIncl: !!l.taxIncl, fields: l.fields || {} };
+    });
+    var r = ENGINE.post(cfg, JSON.parse(JSON.stringify(lab.header)), lines);
+    lab.result = r;
+    lab.missionMsg = null;
+
+    if (r.ok) {
+      persistCfg();
+      S.recordDoc({ belnr: r.belnr, at: new Date().toISOString(), type: lab.header.docType });
+      if (!S.state().docs.some(function (d) { return d.belnr !== r.belnr; }) || true) S.addXP(5, '転記成功');
+    }
+
+    if (lab.missionId) {
+      var m = MISSIONS.filter(function (x) { return x.id === lab.missionId; })[0];
+      var res = m.check({ result: r, cfg: cfg, header: lab.header, lines: lines });
+      if (res.pass) {
+        var first = S.completeMission(m.id, m.xp);
+        lab.missionMsg = { pass: true, text: '達成！ ' + (first ? '+' + m.xp + ' XP　' : '（達成済み）') + m.lesson };
+        if (first) flash('ミッション達成 +' + m.xp + ' XP');
+      } else {
+        lab.missionMsg = { pass: false, text: res.msg };
+      }
+    }
+    render();
+  }
+
+  function preset(kind) {
+    if (kind === 'ap') {
+      lab.header = { docType: 'KR', postingDate: S.today(), docDate: S.today(), currency: 'JPY', reference: 'INV-0001', headerText: '' };
+      lab.lines = [
+        { pk: '31', account: '', partner: 'V-1001', amount: '11000', taxCode: '', taxIncl: false, fields: { text: '部材仕入', paymentTerms: 'N030' } },
+        { pk: '40', account: '500000', partner: '', amount: '10000', taxCode: 'V1', taxIncl: false, fields: { text: '部材仕入' } }
+      ];
+    } else {
+      lab.header = { docType: 'DR', postingDate: S.today(), docDate: S.today(), currency: 'JPY', reference: 'SO-0001', headerText: '' };
+      lab.lines = [
+        { pk: '01', account: '', partner: 'C-2001', amount: '11000', taxCode: '', taxIncl: false, fields: { text: '製品売上', paymentTerms: 'N030' } },
+        { pk: '50', account: '400000', partner: '', amount: '10000', taxCode: 'A1', taxIncl: false, fields: { text: '製品売上', profitCenter: 'PC1000' } }
+      ];
+    }
+    lab.result = null;
+  }
+
+  document.addEventListener('click', function (e) {
+    var t = e.target.closest('[data-nav],[data-act]');
+    if (!t) return;
+    if (t.dataset.nav) { e.preventDefault(); view = t.dataset.nav; render(); return; }
+    var a = t.dataset.act;
+
+    if (a === 'add-line') { lab.lines.push({ pk: '40', account: '', partner: '', amount: '', taxCode: '', taxIncl: false, fields: {} }); render(); }
+    else if (a === 'del-line') { lab.lines.splice(+t.dataset.line, 1); render(); }
+    else if (a === 'post') { doPost(); }
+    else if (a === 'load-preset') { preset(t.dataset.preset); render(); }
+    else if (a === 'reset-cfg') { if (confirm('設定を初期値に戻します。よろしいですか？')) { resetCfg(); flash('設定を初期化しました'); render(); } }
+    else if (a === 'reset-all') { if (confirm('進捗（XP・ミッション・ドリル成績・設定）をすべて消去します。よろしいですか？')) { S.reset(); loadCfg(); flash('リセットしました'); render(); } }
+    else if (a === 'mission-take') { lab.missionId = t.dataset.id; lab.result = null; lab.missionMsg = null; view = 'lab'; render(); }
+    else if (a === 'mission-clear') { lab.missionId = null; lab.missionMsg = null; render(); }
+    else if (a === 'quiz-start') { startQuiz(t.dataset.mode); render(); }
+    else if (a === 'quiz-reset') { quiz = { queue: [], idx: 0, answered: null, mode: 'due' }; render(); }
+    else if (a === 'quiz-answer') {
+      var q = quiz.queue[quiz.idx];
+      quiz.answered = +t.dataset.i;
+      var ok = quiz.answered === q.a;
+      S.gradeDrill(q.id, ok);
+      S.addXP(ok ? 5 : 1, 'ドリル ' + q.id);
+      render();
+    }
+    else if (a === 'quiz-reveal') { quiz.answered = -1; render(); }
+    else if (a === 'quiz-self') {
+      var q2 = quiz.queue[quiz.idx];
+      var ok2 = t.dataset.ok === '1';
+      S.gradeDrill(q2.id, ok2);
+      S.addXP(ok2 ? 8 : 2, 'ドリル ' + q2.id);
+      quiz.idx++; quiz.answered = null; render();
+    }
+    else if (a === 'quiz-next') { quiz.idx++; quiz.answered = null; render(); }
+  });
+
+  /* 入力：select / checkbox は再描画、text は状態更新のみ */
+  function readControl(el) {
+    var d = el.dataset;
+    if (d.h) { lab.header[d.h] = el.value; return false; }
+    if (d.line != null && d.k) {
+      var ln = lab.lines[+d.line];
+      ln[d.k] = (el.type === 'checkbox') ? el.checked : el.value;
+      if (d.k === 'pk') { ln.account = ''; ln.partner = ''; }
+      return d.k !== 'amount';
+    }
+    if (d.line != null && d.field) {
+      lab.lines[+d.line].fields[d.field] = el.value;
+      return false;
+    }
+    if (d.mastery) { S.setMastery(d.mastery, +el.value); return true; }
+    if (d.cfg) {
+      var path = d.cfg.split('.');
+      cfg[path[0]][path[1]] = num(el.value, cfg[path[0]][path[1]]);
+      persistCfg(); return false;
+    }
+    if (d.dt) {
+      var dt = cfg.docTypes[d.dt];
+      if (d.at) {
+        var i = dt.accountTypes.indexOf(d.at);
+        if (el.checked && i < 0) dt.accountTypes.push(d.at);
+        if (!el.checked && i >= 0) dt.accountTypes.splice(i, 1);
+      } else if (d.ref) dt.refRequired = el.checked;
+      persistCfg(); return false;
+    }
+    if (d.pkfs) { cfg.postingKeys[d.pkfs].fs[d.f] = el.value; persistCfg(); return false; }
+    if (d.fsg) { cfg.fieldStatusGroups[d.fsg].fs[d.f] = el.value; persistCfg(); return false; }
+    if (d.gl) {
+      var g = cfg.glAccounts[d.gl];
+      g[d.p] = (el.type === 'checkbox') ? el.checked : el.value;
+      persistCfg(); return false;
+    }
+    if (d.tax) { cfg.taxCodes[d.tax].rate = num(el.value, cfg.taxCodes[d.tax].rate); persistCfg(); return false; }
+    return false;
+  }
+
+  document.addEventListener('change', function (e) {
+    var el = e.target;
+    if (!el.dataset) return;
+    var needRender = readControl(el);
+    if (el.tagName === 'SELECT' || el.type === 'checkbox' || needRender) render();
+  });
+  document.addEventListener('input', function (e) {
+    var el = e.target;
+    if (el.tagName === 'INPUT' && el.type !== 'checkbox' && el.dataset && (el.dataset.line != null || el.dataset.h)) {
+      readControl(el);
+    }
+  });
+
+  /* 起動 */
+  loadCfg();
+  S.touchStreak();
+  render();
+})();
+
+</script>
