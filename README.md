@@ -35,8 +35,9 @@ GitHub Pages で公開する場合：リポジトリ設定 → Pages → Source 
 | 教材 | 内容 |
 |---|---|
 | [knowledge/w01_organization.md](knowledge/w01_organization.md) | 講義ノート＋設計判断リスト＋自己テスト 7 問 |
+| [knowledge/w01_session01.md](knowledge/w01_session01.md) | セッション①の問答記録と補足（弱点はドリル化） |
 | [hands-on/w01.md](hands-on/w01.md) | 検証環境／サンドボックス／ラボの役割別ハンズオン |
-| 学習ラボ ドリル | W1 の問題 19 問（うち設計判断の記述式 3 問） |
+| 学習ラボ ドリル | W1 の問題 22 問（うち設計判断の記述式 3 問） |
 | 学習ラボ ミッション | M05 期間を締める |
 
 ## 環境ごとの役割分担
