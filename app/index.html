@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SAP FI 実習ラボ</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<header class="top">
+  <div class="brand">SAP FI 実習ラボ<small>設定と挙動の因果を、手で確かめる</small></div>
+  <nav>
+    <button data-nav="home">ホーム</button>
+    <button data-nav="lab">転記ラボ</button>
+    <button data-nav="img">IMG（設定）</button>
+    <button data-nav="missions">ミッション</button>
+    <button data-nav="drill">ドリル</button>
+  </nav>
+  <div class="hud" id="hud"></div>
+</header>
+<main id="view"></main>
+<div class="flash" id="flash" style="display:none"></div>
+
+<script src="js/data.js"></script>
+<script src="js/engine.js"></script>
+<script src="js/store.js"></script>
+<script src="js/missions.js"></script>
+<script src="js/drills.js"></script>
+<script src="js/ui.js"></script>
+</body>
+</html>
