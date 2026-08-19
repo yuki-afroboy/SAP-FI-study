@@ -38,6 +38,22 @@
     };
   }
 
+  /* --- 保存領域が本当に使えるかを実測する ---
+     サンドボックス化された iframe では localStorage が例外を投げるか、
+     書けても次回の読み込みで消えていることがある。
+     黙って握りつぶすと「進捗が消える」という最悪の壊れ方をするので、明示的に判定する。 */
+  var storage = (function () {
+    var probe = KEY + '.probe';
+    try {
+      var prev = localStorage.getItem(probe);
+      localStorage.setItem(probe, String(Date.now()));
+      if (localStorage.getItem(probe) == null) return { ok: false, persisted: false, reason: '書き込んだ値を読み戻せない' };
+      return { ok: true, persisted: prev != null, reason: '' };
+    } catch (e) {
+      return { ok: false, persisted: false, reason: String(e && e.name || e) };
+    }
+  })();
+
   var state = load();
 
   function load() {
@@ -52,7 +68,41 @@
   }
 
   function save() {
-    try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {}
+    if (!storage.ok) return;
+    try { localStorage.setItem(KEY, JSON.stringify(state)); }
+    catch (e) { storage.ok = false; storage.reason = String(e && e.name || e); }
+  }
+
+  /* --- 進捗の書き出しと復元 ---
+     保存領域が使えない環境でも学習を続けられるようにするための逃げ道。
+     出力はそのまま progress/ にコミットできる JSON。 */
+  /* 復元に不要なもの（XP 履歴・転記済み伝票）は落とし、
+     IMG 設定が初期値のままなら丸ごと省く。手で運べる長さにするため。 */
+  function cfgBaseline() {
+    if (typeof SEED === 'undefined') return null;
+    var b = JSON.parse(JSON.stringify(SEED));
+    b.companyCode = '1000';
+    return JSON.stringify(b);
+  }
+  function exportState() {
+    var o = JSON.parse(JSON.stringify(state));
+    delete o.log; delete o.docs;
+    var base = cfgBaseline();
+    if (o.cfg && base && JSON.stringify(o.cfg) === base) delete o.cfg;
+    return JSON.stringify(o);
+  }
+
+  function importState(text) {
+    var o;
+    try { o = JSON.parse(text); } catch (e) { return { ok: false, msg: 'JSON として読めません。全文をそのまま貼り付けてください。' }; }
+    if (!o || typeof o !== 'object' || !('xp' in o) || !('drills' in o)) {
+      return { ok: false, msg: 'この学習ラボの進捗データではないようです。' };
+    }
+    var b = blank();
+    Object.keys(b).forEach(function (k) { if (!(k in o)) o[k] = b[k]; });
+    state = o;
+    save();
+    return { ok: true, msg: '復元しました（W' + state.week + '／XP ' + state.xp + '）。' };
   }
 
   function touchStreak() {
@@ -138,6 +188,7 @@
     save: save, addXP: addXP, level: level, levelProgress: levelProgress,
     touchStreak: touchStreak, drillCard: drillCard, dueDrills: dueDrills,
     gradeDrill: gradeDrill, completeMission: completeMission,
+    storage: storage, exportState: exportState, importState: importState,
     setMastery: setMastery, setWeek: setWeek, inScope: inScope,
     recordDoc: recordDoc, saveCfg: saveCfg, reset: reset,
     today: today, DOMAINS: DOMAINS, LEVELS: LEVELS

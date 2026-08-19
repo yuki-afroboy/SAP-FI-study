@@ -5,6 +5,7 @@
   'use strict';
 
   var S = STORE, view = 'home', cfg = null, flashTimer = null;
+  var lastImportMsg = '', lastImportOk = false;
 
   function deep(o) { return JSON.parse(JSON.stringify(o)); }
   function esc(s) {
@@ -18,6 +19,34 @@
       return '<option value="' + esc(k) + '"' + (k === sel ? ' selected' : '') + '>' + esc(label) + '</option>';
     }).join('');
   }
+  /* 生成したファイルを利用者に渡す。
+     Artifact ビューアでは downloads ケイパビリティ経由でしか渡せず、
+     GitHub Pages やローカルでは通常のダウンロードで渡せる。両方に対応する。 */
+  function saveFile(name, text) {
+    var p;
+    try {
+      p = (window.claude && typeof window.claude.use === 'function')
+        ? window.claude.use('downloads') : Promise.resolve(null);
+    } catch (e) { p = Promise.resolve(null); }
+    return p.then(function (dl) {
+      if (dl) {
+        return dl.save({ filename: name, data: text }).then(
+          function () { flash('保存しました'); },
+          function (e) {
+            flash(e && e.code === 'declined' ? 'キャンセルしました'
+              : 'この画面では保存できません。テキストをコピーしてください');
+          });
+      }
+      var blob = new Blob([text], { type: 'application/octet-stream' });
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement('a');
+      a.href = url; a.download = name;
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+      flash('ダウンロードしました');
+    }, function () { flash('保存できませんでした。テキストをコピーしてください'); });
+  }
+
   function flash(msg) {
     var d = document.getElementById('flash');
     d.textContent = msg; d.style.display = 'block';
@@ -58,7 +87,22 @@
     var doneM = MISSIONS.filter(function (m) { return st.missions[m.id] && st.missions[m.id].done; }).length;
     var wk = SEED.weeks.filter(function (w) { return w.w === st.week; })[0] || SEED.weeks[0];
 
-    var stats = '<div class="card"><div class="grid g3">' +
+    var banner = '';
+    if (!S.storage.ok) {
+      banner = '<div class="card" style="border-color:var(--err)">' +
+        '<h2 style="color:var(--err)">⚠ この画面では進捗が保存されません</h2>' +
+        '<p class="small">ブラウザの保存領域を使えませんでした（' + esc(S.storage.reason) + '）。' +
+        'このまま学習しても、閉じた時点で XP・ミッション・ドリルの記録が消えます。</p>' +
+        '<p class="small"><b>対処：</b>下の「進捗データ（復元用）」をコピーして保管し、次回は「復元」から貼り戻してください。' +
+        '毎回それをやるのは現実的でないので、恒久的には GitHub Pages 版か、リポジトリを clone してローカルで ' +
+        '<span class="mono">app/index.html</span> を開く運用に切り替えることを勧めます。</p></div>';
+    } else if (!S.storage.persisted) {
+      banner = '<div class="card" style="border-color:var(--warn)">' +
+        '<p class="small"><b>保存領域は使えています。</b>この画面での記録は初回なので、次に開いたときに残っているかを確認してください。' +
+        '残っていなければ、下の「進捗データ」を保管する運用に切り替えます。</p></div>';
+    }
+
+    var stats = banner + '<div class="card"><div class="grid g3">' +
       '<div class="stat"><b>Lv.' + S.level() + '</b><span>レベル</span></div>' +
       '<div class="stat"><b>' + st.xp + '</b><span>累計 XP</span></div>' +
       '<div class="stat"><b>' + st.streak.count + '</b><span>連続学習日数（最長 ' + st.streak.best + '）</span></div>' +
@@ -108,10 +152,25 @@
           '</select></div>';
       }).join('') + '</div>';
 
-    var exportCard = '<div class="card"><h2>進捗の記録</h2>' +
-      '<p class="small muted">下のテキストをコピーして <span class="mono">progress/</span> にコミットすると、学習ログがリポジトリに残ります。</p>' +
-      '<textarea rows="10" readonly class="mono" style="font-size:.75rem">' + esc(exportText()) + '</textarea>' +
-      '<div style="margin-top:.5rem"><button class="btn ghost sm" data-act="reset-all">進捗をリセット</button></div></div>';
+    var exportCard = '<div class="card"><h2>進捗データ（復元用）</h2>' +
+      '<p class="small muted">この JSON が進捗の実体です。<span class="mono">progress/state.json</span> としてコミットしておけば、' +
+      '環境が変わっても、記録が消えても、いつでもここに戻れます。</p>' +
+      '<textarea id="stateOut" rows="6" readonly class="mono" style="font-size:.72rem">' + esc(S.exportState()) + '</textarea>' +
+      '<div style="display:flex;gap:.5rem;margin:.5rem 0;flex-wrap:wrap">' +
+      '<button class="btn sm" data-act="save-state">state.json として保存</button>' +
+      '<button class="btn ghost sm" data-act="copy-state">コピー</button></div>' +
+      '<h3 style="margin-top:1rem">復元</h3>' +
+      '<p class="small muted">保管しておいた JSON を貼り付けて復元します。現在の進捗は上書きされます。</p>' +
+      '<textarea id="stateIn" rows="3" class="mono" style="font-size:.72rem" placeholder="ここに進捗データを貼り付ける"></textarea>' +
+      '<div style="margin-top:.5rem"><button class="btn sm" data-act="import-state">復元する</button></div>' +
+      (lastImportMsg ? '<div class="msg ' + (lastImportOk ? 'ok' : 'err') + '">' + esc(lastImportMsg) + '</div>' : '') +
+      '</div>' +
+      '<div class="card"><h2>学習ログ（週次レビュー用）</h2>' +
+      '<p class="small muted">読みやすい形の要約。<span class="mono">progress/YYYY-MM-DD.md</span> としてコミットします。</p>' +
+      '<textarea rows="8" readonly class="mono" style="font-size:.75rem">' + esc(exportText()) + '</textarea>' +
+      '<div style="display:flex;gap:.5rem;margin-top:.5rem;flex-wrap:wrap">' +
+      '<button class="btn sm" data-act="save-log">.md として保存</button>' +
+      '<button class="btn ghost sm" data-act="reset-all">進捗をリセット</button></div></div>';
 
     return stats + todo + tree + mastery + exportCard;
   }
@@ -580,6 +639,25 @@
     else if (a === 'post') { doPost(); }
     else if (a === 'load-preset') { preset(t.dataset.preset); render(); }
     else if (a === 'reset-cfg') { if (confirm('設定を初期値に戻します。よろしいですか？')) { resetCfg(); flash('設定を初期化しました'); render(); } }
+    else if (a === 'save-state') { saveFile('state.json', S.exportState()); }
+    else if (a === 'save-log') { saveFile('study-log-' + S.today() + '.md', exportText()); }
+    else if (a === 'copy-state') {
+      var ta = document.getElementById('stateOut');
+      ta.select();
+      var done = false;
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(ta.value).then(function () { flash('コピーしました'); }, function () {});
+        done = true;
+      }
+      if (!done) { try { document.execCommand('copy'); flash('コピーしました'); } catch (e) { flash('全選択しました。手動でコピーしてください'); } }
+    }
+    else if (a === 'import-state') {
+      var src = document.getElementById('stateIn').value;
+      var r = S.importState(src);
+      lastImportMsg = r.msg; lastImportOk = r.ok;
+      if (r.ok) { loadCfg(); flash('復元しました'); }
+      render();
+    }
     else if (a === 'reset-all') { if (confirm('進捗（XP・ミッション・ドリル成績・設定）をすべて消去します。よろしいですか？')) { S.reset(); loadCfg(); flash('リセットしました'); render(); } }
     else if (a === 'mission-take') { lab.missionId = t.dataset.id; lab.result = null; lab.missionMsg = null; view = 'lab'; render(); }
     else if (a === 'mission-clear') { lab.missionId = null; lab.missionMsg = null; render(); }
